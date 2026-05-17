@@ -1,0 +1,85 @@
+<svg width="1200" height="620" viewBox="0 0 1200 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#09090B"/>
+      <stop offset="0.55" stop-color="#111827"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="angel" x1="498" y1="122" x2="700" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title { font: 700 42px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI"; fill: #F8FAFC; }
+      .sub { font: 500 20px Inter, ui-sans-serif, system-ui; fill: #CBD5E1; }
+      .term { font: 500 18px "SFMono-Regular", Consolas, monospace; fill: #CBD5E1; }
+      .green { fill: #86EFAC; }
+      .purple { fill: #C4B5FD; }
+      .yellow { fill: #FDE68A; }
+      .muted { fill: #64748B; }
+      .bubble { font: 600 17px Inter, ui-sans-serif, system-ui; fill: #EDE9FE; }
+      .small { font: 500 14px Inter, ui-sans-serif, system-ui; fill: #A5B4FC; }
+      .blink { animation: blink 1.2s infinite; }
+      .float { animation: float 3s ease-in-out infinite; }
+      .pulse { animation: pulse 2.4s ease-in-out infinite; transform-origin: center; }
+      @keyframes blink { 0%, 45% { opacity: 1; } 46%, 100% { opacity: .12; } }
+      @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+      @keyframes pulse { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
+    </style>
+  </defs>
+
+  <rect width="1200" height="620" rx="36" fill="url(#bg)"/>
+  <circle cx="980" cy="100" r="170" fill="#7C3AED" opacity=".12"/>
+  <circle cx="220" cy="520" r="220" fill="#22C55E" opacity=".08"/>
+
+  <text x="72" y="78" class="title">Guardian Angel in Claude Code</text>
+  <text x="73" y="112" class="sub">과거의 질문과 노트를 감지해서, CLI 안에서 짧게 상기시켜준다.</text>
+
+  <g transform="translate(72 156)">
+    <rect width="710" height="386" rx="22" fill="#020617" stroke="#334155" stroke-width="2"/>
+    <rect width="710" height="46" rx="22" fill="#0F172A"/>
+    <circle cx="28" cy="23" r="7" fill="#F87171"/>
+    <circle cx="52" cy="23" r="7" fill="#FBBF24"/>
+    <circle cx="76" cy="23" r="7" fill="#34D399"/>
+    <text x="112" y="30" class="term muted">mae@guardian ~/projects/api</text>
+
+    <text x="32" y="86" class="term green">$ claude</text>
+    <text x="32" y="126" class="term">></text>
+    <text x="58" y="126" class="term">Refactor retrieval pipeline for better recall...</text>
+    <text x="32" y="170" class="term muted">● Searching context...</text>
+    <text x="32" y="210" class="term purple">Guardian matched 3 related memories</text>
+    <text x="32" y="252" class="term yellow">① RAG chunking decision / 2026-05-08</text>
+    <text x="32" y="286" class="term yellow">② Obsidian graph note / semantic edges</text>
+    <text x="32" y="320" class="term yellow">③ Claude prompt / nDCG evaluation</text>
+    <text x="32" y="360" class="term green">Angel:</text>
+    <text x="105" y="360" class="term">비슷한 설계 결정을 이미 했어요.</text>
+    <rect x="397" y="344" width="11" height="23" class="blink" fill="#A7F3D0"/>
+  </g>
+
+  <g class="float" filter="url(#glow)">
+    <ellipse cx="940" cy="276" rx="106" ry="72" fill="#111827" stroke="#A78BFA" stroke-width="3"/>
+    <path d="M830 250C779 222 752 234 741 260C764 263 791 273 816 300C823 286 829 269 830 250Z" fill="#DDD6FE" opacity=".9"/>
+    <path d="M1050 250C1101 222 1128 234 1139 260C1116 263 1089 273 1064 300C1057 286 1051 269 1050 250Z" fill="#DDD6FE" opacity=".9"/>
+    <circle cx="906" cy="265" r="8" fill="#FDE68A"/>
+    <circle cx="974" cy="265" r="8" fill="#FDE68A"/>
+    <path d="M913 300C930 316 952 316 968 300" stroke="#FDE68A" stroke-width="6" stroke-linecap="round"/>
+    <ellipse cx="940" cy="188" rx="68" ry="18" stroke="#FDE68A" stroke-width="7" opacity=".95"/>
+    <circle cx="940" cy="276" r="118" stroke="#A78BFA" stroke-width="2" opacity=".22" class="pulse"/>
+  </g>
+
+  <g transform="translate(803 408)">
+    <rect width="320" height="88" rx="20" fill="#312E81" stroke="#A78BFA" stroke-width="1.5"/>
+    <text x="24" y="36" class="bubble">“전에 만든 GraphRAG 노트가</text>
+    <text x="24" y="62" class="bubble">이번 설계와 비슷해요.”</text>
+    <path d="M132 0L164 -32L182 0" fill="#312E81"/>
+  </g>
+
+  <text x="72" y="584" class="small">Capture → Connect → Recall</text>
+</svg>
