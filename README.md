@@ -39,9 +39,12 @@ flowchart LR
   A[Obsidian Notes] --> C[Capture Layer]
   B[Claude Code Prompts] --> C
   C --> D[Semantic Processing]
-  D --> E[Knowledge Graph]
-  E --> F[Recall Engine]
-  F --> G[Angel + Dashboard]
+  D --> E[Knowledge Graph\nGraphRAG]
+  E --> F[Retrieval Agent\nquery expansion → graph traversal]
+  F --> G[Response Agent\nmessage generation]
+  G --> H{Guardrails\nconfidence threshold}
+  H -->|pass| I[Angel + Dashboard]
+  H -->|block| J[silent drop]
 ```
 
 ---
@@ -55,9 +58,24 @@ flowchart LR
 | Metadata | SQLite |
 | Vector DB | Chroma |
 | Graph | NetworkX |
+| GraphRAG | Chroma + NetworkX (semantic + structural traversal) |
+| Agent Layer | Multi-agent — Retrieval Agent + Response Agent |
+| Guardrails | Confidence scoring — threshold-based Angel trigger |
 | Frontend | React + Vite + d3.js |
 | Claude integration | MCP Server + Hooks |
 | Evaluation | RAGAS |
+
+---
+
+## Angel Flow
+
+Angel이 뜨기까지의 두 단계 에이전트 파이프라인이에요.
+
+**Retrieval Agent** — 현재 작업 컨텍스트를 받아서 LLM이 검색 쿼리를 재작성(query expansion)하고, Chroma 벡터 검색과 NetworkX 그래프 순회를 조합해 관련 청크를 선별해요.
+
+**Response Agent** — 선별된 청크를 받아서 LLM이 Angel 메시지를 생성하고, 근거가 되는 노트를 함께 첨부해요.
+
+**Guardrails** — Response Agent 출력의 관련성 점수가 threshold 아래면 Angel을 silent drop해요. False positive를 막아서 Angel이 의미 있을 때만 떠요.
 
 ---
 
@@ -76,8 +94,8 @@ flowchart LR
 |---|---|
 | 1-2 | Capture infrastructure |
 | 3-4 | Knowledge graph dashboard |
-| 5 | Insight layer |
-| 6 | Angel + MCP integration |
+| 5 | Retrieval Agent + Guardrails |
+| 6 | Response Agent + MCP integration |
 
 ---
 
