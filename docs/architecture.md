@@ -70,9 +70,9 @@ flowchart LR
 
 Angel이 뜨기까지의 단일 에이전트 파이프라인이에요.
 
-**Recall Agent** : 현재 작업 컨텍스트를 받아서 하나의 LLM call 안에서 검색 쿼리를 재작성하고, Chroma 벡터 검색과 NetworkX 그래프 순회를 조합해 관련 청크를 선별하고, Angel 메시지를 생성해요. 메시지에는 근거가 되는 노트가 함께 첨부돼요.
+**Recall Agent** — 현재 작업 컨텍스트를 받아서 하나의 LLM call 안에서 검색 쿼리를 재작성하고, Chroma 벡터 검색과 NetworkX 그래프 순회를 조합해 관련 청크를 선별하고, Angel 메시지를 생성해요. 메시지에는 근거가 되는 노트가 함께 첨부돼요.
 
-**Guardrails** : Recall Agent 출력의 관련성 점수가 threshold 아래면 Angel을 silent drop해요. False positive를 막아서 Angel이 의미 있을 때만 떠요.
+**Guardrails** — Recall Agent 출력의 관련성 점수가 threshold 아래면 Angel을 silent drop해요. False positive를 막아서 Angel이 의미 있을 때만 떠요.
 
 > Multi-agent (Retrieval / Response 분리) 는 의도적으로 채택하지 않았어요. Angel은 백그라운드 트리거라 지연이 곧 UX 손상이고, 현 단계에서는 single call로 품질이 충분해요. RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 그때 분리해요.
 
@@ -95,12 +95,6 @@ Angel이 뜨기까지의 단일 에이전트 파이프라인이에요.
 | 3-4 | Knowledge graph dashboard |
 | 5 | Recall Agent + Guardrails |
 | 6 | MCP integration |
-
----
-
-## Wiki
-
-[Wiki](https://github.com/Starlight258/Guardian/wiki)
 
 ---
 
