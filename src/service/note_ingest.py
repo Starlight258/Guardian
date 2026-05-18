@@ -5,8 +5,8 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from src.crud.source import (
+    delete_obsidian_note_source,
     move_obsidian_note_source,
-    soft_delete_obsidian_note_source,
     upsert_obsidian_note_source,
 )
 
@@ -21,7 +21,7 @@ def ingest_obsidian_note(session: Session, *, path: Path) -> None:
 
 
 def delete_obsidian_note(session: Session, *, path: Path) -> None:
-    soft_delete_obsidian_note_source(session, path=path)
+    delete_obsidian_note_source(session, path=path)
     session.commit()
 
 

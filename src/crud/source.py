@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from src.crud.chunk import delete_source_chunks, replace_source_chunks
 from src.models import Chunk, Source
+from src.utils import count_tokens, hash_text
 
 OBSIDIAN_SOURCE_TYPE = "obsidian_note"
 
@@ -27,7 +27,7 @@ def upsert_obsidian_note_source(
         )
     )
 
-    content_hash = _hash_text(content)
+    content_hash = hash_text(content)
     if source is None:
         source = Source(
             id=str(uuid4()),
@@ -36,17 +36,15 @@ def upsert_obsidian_note_source(
             path=normalized_path,
             metadata_json={},
             content_hash=content_hash,
-            is_deleted=False,
         )
         session.add(source)
         session.flush()
     else:
-        if source.content_hash == content_hash and source.is_deleted is False:
+        if source.content_hash == content_hash:
             return source
 
         source.title = path.stem
         source.content_hash = content_hash
-        source.is_deleted = False
 
     replace_source_chunks(
         session,
@@ -57,7 +55,7 @@ def upsert_obsidian_note_source(
                 source_id=source.id,
                 chunk_index=0,
                 text=content,
-                token_count=_count_tokens(content),
+                token_count=count_tokens(content),
                 content_hash=content_hash,
             )
         ],
@@ -65,7 +63,7 @@ def upsert_obsidian_note_source(
     return source
 
 
-def soft_delete_obsidian_note_source(session: Session, *, path: Path) -> Source | None:
+def delete_obsidian_note_source(session: Session, *, path: Path) -> Source | None:
     source = session.scalar(
         select(Source).where(
             Source.source_type == OBSIDIAN_SOURCE_TYPE,
@@ -75,8 +73,8 @@ def soft_delete_obsidian_note_source(session: Session, *, path: Path) -> Source 
     if source is None:
         return None
 
-    source.is_deleted = True
     delete_source_chunks(session, source_id=source.id)
+    session.execute(delete(Source).where(Source.id == source.id))
     return source
 
 
@@ -97,21 +95,11 @@ def move_obsidian_note_source(session: Session, *, old_path: Path, new_path: Pat
         return target
 
     if target is not None and target.id != source.id:
-        source.is_deleted = True
         delete_source_chunks(session, source_id=source.id)
+        session.execute(delete(Source).where(Source.id == source.id))
         target.title = new_path.stem
-        target.is_deleted = False
         return target
 
     source.path = str(new_path)
     source.title = new_path.stem
-    source.is_deleted = False
     return source
-
-
-def _hash_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def _count_tokens(text: str) -> int:
-    return len(text.split())

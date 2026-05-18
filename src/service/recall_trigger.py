@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from src.utils import count_tokens
+
 MIN_PROMPT_TOKENS = 50
 
 
@@ -22,10 +24,6 @@ class RecallTriggerResult:
     token_count: int
     recall_triggered: bool
     reason: str | None = None
-
-
-def count_tokens(text: str) -> int:
-    return len(text.split())
 
 
 def trigger_recall_from_prompt(

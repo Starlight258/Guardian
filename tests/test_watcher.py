@@ -46,7 +46,6 @@ def test_ingest_obsidian_note_creates_source_and_chunk(tmp_path: Path) -> None:
 
     assert source is not None
     assert source.title == "note"
-    assert source.is_deleted is False
     assert len(chunks) == 1
     assert chunks[0].source_id == source.id
     assert chunks[0].text == "alpha beta gamma"
@@ -96,7 +95,7 @@ def test_ingest_obsidian_note_skips_unchanged_content(tmp_path: Path) -> None:
     assert chunks[0].id == original_chunk_id
 
 
-def test_delete_obsidian_note_soft_deletes_source_and_removes_chunks(tmp_path: Path) -> None:
+def test_delete_obsidian_note_removes_source_and_chunks(tmp_path: Path) -> None:
     session_factory = make_session_factory()
     note_path = tmp_path / "note.md"
     note_path.write_text("alpha beta gamma", encoding="utf-8")
@@ -110,8 +109,7 @@ def test_delete_obsidian_note_soft_deletes_source_and_removes_chunks(tmp_path: P
         source = session.scalar(select(Source).where(Source.path == str(note_path)))
         chunk_count = len(list(session.scalars(select(Chunk))))
 
-    assert source is not None
-    assert source.is_deleted is True
+    assert source is None
     assert chunk_count == 0
 
 
@@ -182,7 +180,6 @@ def test_move_obsidian_note_updates_source_path(tmp_path: Path) -> None:
     assert old_source is None
     assert new_source is not None
     assert new_source.title == "new"
-    assert new_source.is_deleted is False
 
 
 def test_move_obsidian_note_merges_when_target_source_exists(tmp_path: Path) -> None:
@@ -203,19 +200,13 @@ def test_move_obsidian_note_merges_when_target_source_exists(tmp_path: Path) -> 
 
     with session_factory() as session:
         active_sources = list(
-            session.scalars(
-                select(Source).where(
-                    Source.path == str(new_path),
-                    Source.is_deleted.is_(False),
-                )
-            )
+            session.scalars(select(Source).where(Source.path == str(new_path)))
         )
         deleted_old = session.scalar(select(Source).where(Source.path == str(old_path)))
         chunks = list(session.scalars(select(Chunk)))
 
     assert len(active_sources) == 1
-    assert deleted_old is not None
-    assert deleted_old.is_deleted is True
+    assert deleted_old is None
     assert len(chunks) == 1
     assert chunks[0].text == "moved content wins"
 

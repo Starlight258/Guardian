@@ -30,7 +30,6 @@ class Source(Base):
     commit_sha: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
     content_hash: Mapped[str] = mapped_column(String(64))
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
