@@ -7,6 +7,11 @@ Guardian은 AI 작업 과정에서 생성되는 노트와 프롬프트를 수집
 
 전체 흐름은 아래와 같아요.
 
+<img width="920" height="800" alt="image" src="https://github.com/user-attachments/assets/38984c23-9de9-491f-8dfd-f26a17de770d" />
+
+<details>
+<summary> [Capture → Connect → Recall] Mermaid </summary>
+
 ```mermaid
 flowchart LR
     A[Obsidian Notes] --> C[Capture Layer]
@@ -32,6 +37,9 @@ flowchart LR
     GR -->|pass| J[Angel]
     GR -->|block| Y[Drop]
 ```
+
+</details>
+
 
 | 단계 | 역할 |
 |---|---|
@@ -161,22 +169,7 @@ Recall은 단일 LLM call로 처리해요.
 3. graph traversal
 4. response generation
 
-```text
-context
-   │
-   ▼
-Single LLM Call
-  ├─ query rewrite
-  ├─ vector retrieval
-  ├─ graph traversal
-  └─ response generation
-          │
-          ▼
-   relevance score
-          │
-          ▼
-      Guardrails
-```
+<img width="638" height="427" alt="image" src="https://github.com/user-attachments/assets/e57089a0-1b8a-4988-8a31-c2209db5e802" />
 
 ## Single Call을 선택한 이유
 
