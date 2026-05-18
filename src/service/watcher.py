@@ -65,7 +65,7 @@ class ObsidianEventHandler(FileSystemEventHandler):
         if _is_markdown_file_event(event):
             path = Path(str(event.src_path))
             self._debouncer.schedule(
-                f"delete:{path}",
+                f"file:{path}",
                 lambda: self._with_session(delete_obsidian_note, path=path),
             )
 
@@ -75,8 +75,6 @@ class ObsidianEventHandler(FileSystemEventHandler):
 
         old_path = Path(str(event.src_path))
         new_path = Path(str(event.dest_path))
-        if old_path.suffix.lower() != ".md" and new_path.suffix.lower() != ".md":
-            return
 
         self._debouncer.schedule(
             f"move:{old_path}:{new_path}",
@@ -88,7 +86,7 @@ class ObsidianEventHandler(FileSystemEventHandler):
 
     def _schedule_ingest(self, path: Path) -> None:
         self._debouncer.schedule(
-            f"ingest:{path}",
+            f"file:{path}",
             lambda: self._with_session(ingest_obsidian_note, path=path),
         )
 
