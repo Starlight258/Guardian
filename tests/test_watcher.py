@@ -14,11 +14,8 @@ from watchdog.events import FileCreatedEvent
 from src.db import Base
 from src.models import Chunk, GraphEdge, Source
 from src.service.note_ingest import delete_obsidian_note, ingest_obsidian_note, move_obsidian_note
-from src.service.watcher import (
-    OBSIDIAN_PATHS_ENV,
-    ObsidianEventHandler,
-    obsidian_paths_from_env,
-)
+from src.service.watcher import ObsidianEventHandler
+from src.utils import OBSIDIAN_PATHS_ENV, obsidian_paths_from_env
 
 
 def make_session_factory() -> Callable[[], Session]:

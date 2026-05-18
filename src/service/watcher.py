@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import threading
 from collections.abc import Callable
 from pathlib import Path
@@ -11,9 +10,9 @@ from watchdog.observers import Observer
 
 from src.db import SessionLocal
 from src.service.note_ingest import delete_obsidian_note, ingest_obsidian_note, move_obsidian_note
+from src.utils import obsidian_paths_from_env
 
 SessionFactory = Callable[[], Session]
-OBSIDIAN_PATHS_ENV = "GUARDIAN_OBSIDIAN_PATHS"
 
 
 class Debouncer:
@@ -54,11 +53,19 @@ class ObsidianEventHandler(FileSystemEventHandler):
 
     def on_created(self, event: FileSystemEvent) -> None:
         if _is_markdown_file_event(event):
-            self._schedule_ingest(Path(str(event.src_path)))
+            path = Path(str(event.src_path))
+            self._debouncer.schedule(
+                f"file:{path}",
+                lambda: self._with_session(ingest_obsidian_note, path=path),
+            )
 
     def on_modified(self, event: FileSystemEvent) -> None:
         if _is_markdown_file_event(event):
-            self._schedule_ingest(Path(str(event.src_path)))
+            path = Path(str(event.src_path))
+            self._debouncer.schedule(
+                f"file:{path}",
+                lambda: self._with_session(ingest_obsidian_note, path=path),
+            )
 
     def on_deleted(self, event: FileSystemEvent) -> None:
         if _is_markdown_file_event(event):
@@ -84,12 +91,6 @@ class ObsidianEventHandler(FileSystemEventHandler):
 
     def stop(self) -> None:
         self._debouncer.cancel_all()
-
-    def _schedule_ingest(self, path: Path) -> None:
-        self._debouncer.schedule(
-            f"file:{path}",
-            lambda: self._with_session(ingest_obsidian_note, path=path),
-        )
 
     def _with_session(self, callback: Callable[..., None], **kwargs) -> None:
         with self._session_factory() as session:
@@ -123,24 +124,6 @@ class ObsidianWatcher:
 
 def create_watchers_from_env() -> list[ObsidianWatcher]:
     return [ObsidianWatcher(vault_path=path) for path in obsidian_paths_from_env()]
-
-
-def obsidian_paths_from_env() -> list[Path]:
-    raw_paths = os.getenv(OBSIDIAN_PATHS_ENV)
-    if not raw_paths:
-        return []
-
-    paths: list[Path] = []
-    seen: set[Path] = set()
-    for raw_path in raw_paths.split(os.pathsep):
-        if not raw_path.strip():
-            continue
-        path = Path(raw_path).expanduser().resolve()
-        if path in seen or not path.exists():
-            continue
-        seen.add(path)
-        paths.append(path)
-    return paths
 
 
 def _is_markdown_file_event(event: FileSystemEvent) -> bool:
