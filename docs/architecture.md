@@ -1,7 +1,7 @@
 # Architecture
 
-Guardian은 AI 작업 과정에서 생성되는 노트와 프롬프트를 수집하고,  
-의미 기반 연결을 구축하는 개인 기억 저장소예요.
+Guardian은 AI 작업 과정에서 생성되는 노트와 commit-session checkpoint를 수집하고,  
+Claude Code prompt event로 현재 작업에 맞는 과거 맥락을 다시 꺼내주는 개인 기억 저장소예요.
 
 > `Capture → Connect → Recall`
 
@@ -15,7 +15,7 @@ Guardian은 AI 작업 과정에서 생성되는 노트와 프롬프트를 수집
 ```mermaid
 flowchart LR
     A[Obsidian Notes] --> C[Capture Layer]
-    B[Claude Code Prompts] --> C
+    B[Git Checkpoints] --> C
 
     C --> LF[Length Filter]
 
@@ -29,7 +29,8 @@ flowchart LR
     F --> G[(SQLite)]
     E --> H[(Chroma)]
 
-    G --> RC[Recall Agent]
+    P[Claude Code Prompt Event] --> RC[Recall Agent]
+    G --> RC
     H --> RC
 
     RC --> GR{Guardrails}
@@ -43,9 +44,9 @@ flowchart LR
 
 | 단계 | 역할 |
 |---|---|
-| Capture | 노트와 프롬프트를 수집해요 |
+| Capture | 노트와 commit-session checkpoint를 수집해요 |
 | Connect | Chunking · Embedding · Graph를 구축해요 |
-| Recall | 검색 · 응답 · Guardrails를 처리해요 |
+| Recall | prompt event를 trigger로 검색 · 응답 · Guardrails를 처리해요 |
 
 ---
 
@@ -64,22 +65,34 @@ Markdown 파일 변경을 filesystem watcher로 감지해요.
 - update
 - delete
 
-## Claude Code
+## Claude Code Prompt Event
 
-Claude Code hook으로 아래 이벤트를 수집해요.
+Claude Code `UserPromptSubmit` hook은 장기 memory source가 아니라 realtime Recall trigger로 사용해요.
 
 - user prompt
-- assistant response
 - timestamp
 - session metadata
 
-MVP에서는 hook 범위를 제한했어요.
+Prompt event는 `/events/prompt`로 전달되고, length filter를 통과하면 현재 작업 컨텍스트로 Recall을 호출해요.  
+원문 prompt는 장기 chunk로 저장하지 않아요.
 
 | 선택 | 이유 |
 |---|---|
-| 제한된 hook 지원 | ingestion 구조를 단순하게 유지해요 |
-| 최소 이벤트만 저장 | replay / debugging이 쉬워져요 |
+| prompt event를 trigger로 사용 | commit checkpoint와 장기 memory 중복을 피해요 |
+| 원문 prompt 장기 저장 안 함 | retrieval noise와 민감정보 저장 위험을 줄여요 |
 | session 전체 미수집 | 운영 복잡도를 줄여요 |
+
+## Git Checkpoint
+
+Commit 이후 생성되는 checkpoint는 장기 memory source로 저장해요.
+
+- commit SHA
+- commit message
+- branch
+- changed files
+- session summary
+
+`commit_sha` 기준으로 중복 수집을 막고, Obsidian 노트와 같은 chunking · embedding · graph 경로를 통과시켜요.
 
 ---
 
@@ -89,7 +102,7 @@ MVP에서는 hook 범위를 제한했어요.
 
 ## Length Filter
 
-짧은 프롬프트는 저장하지 않아요.
+짧은 prompt event나 문서는 처리하지 않아요.
 
 예:
 
@@ -114,7 +127,7 @@ MVP에서는 hook 범위를 제한했어요.
 |---|---|
 | 구조화된 노트 | Header 기반 split |
 | 비구조화 노트 | Sliding window |
-| 짧은 프롬프트 | filter 단계에서 제외 |
+| 짧은 prompt event | filter 단계에서 제외 |
 
 | 항목 | 값 |
 |---|---|
@@ -130,7 +143,7 @@ Overlap은 chunk 경계에서 의미가 끊기는 문제를 줄이기 위한 설
 Chunk는 embedding vector로 변환해요.
 
 1. Chroma에 저장해서 semantic retrieval에 사용해요
-2. 유사 chunk 간 edge를 생성해서 graph를 구성해요
+2. 신규 chunk마다 Chroma top-k 후보만 비교해 유사 chunk 간 edge를 생성해요
 
 ---
 
@@ -158,12 +171,11 @@ Chunk는 embedding vector로 변환해요.
 
 Recall은 단일 LLM call로 처리해요.
 
-하나의 prompt 안에서 아래 작업이 함께 수행돼요.
+LLM 호출 전에 retrieval context를 먼저 구성해요.
 
-1. query rewrite
-2. vector retrieval
-3. graph traversal
-4. response generation
+1. 현재 작업 컨텍스트로 Chroma top-k retrieval
+2. NetworkX 인접 노드 주입
+3. 단일 LLM call로 relevance score와 Angel message 생성
 
 <img width="638" height="427" alt="image" src="https://github.com/user-attachments/assets/e57089a0-1b8a-4988-8a31-c2209db5e802" />
 
@@ -181,6 +193,8 @@ Angel은 작업 흐름 중간에 백그라운드로 실행돼요.
 | Token cost | 낮아요 | 높아요 |
 
 Multi-agent의 분리 이점보다 응답 속도를 우선했어요.
+
+LLM 기반 query rewrite는 MVP에서 제외해요. 검색 입력은 현재 작업 컨텍스트를 그대로 사용하고, BGE-M3 dense retrieval이 semantic search를 담당해요.
 
 ---
 
@@ -205,7 +219,7 @@ Guardrails는 별도 agent가 아닌 단순 후처리 함수로 구현해요.
 | 선택 | 장점 | 비용 |
 |---|---|---|
 | Single LLM call | 저지연 · 저비용 | prompt 복잡도가 증가해요 |
-| In-prompt rewrite | 단계가 줄어들어요 | 모델 의존성이 증가해요 |
+| Query rewrite 제외 | retrieval 흐름이 단순해요 | 검색 품질 튜닝 여지가 줄어요 |
 | Post-hoc guardrails | 구조가 단순해져요 | calibration이 필요해요 |
 
 ---
