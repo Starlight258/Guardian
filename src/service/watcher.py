@@ -14,7 +14,6 @@ from src.service.note_ingest import delete_obsidian_note, ingest_obsidian_note, 
 
 SessionFactory = Callable[[], Session]
 OBSIDIAN_PATHS_ENV = "GUARDIAN_OBSIDIAN_PATHS"
-OBSIDIAN_PATH_ENV = "GUARDIAN_OBSIDIAN_PATH"
 
 
 class Debouncer:
@@ -127,7 +126,7 @@ def create_watchers_from_env() -> list[ObsidianWatcher]:
 
 
 def obsidian_paths_from_env() -> list[Path]:
-    raw_paths = os.getenv(OBSIDIAN_PATHS_ENV) or os.getenv(OBSIDIAN_PATH_ENV)
+    raw_paths = os.getenv(OBSIDIAN_PATHS_ENV)
     if not raw_paths:
         return []
 

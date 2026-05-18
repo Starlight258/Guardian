@@ -15,7 +15,6 @@ from src.db import Base
 from src.models import Chunk, GraphEdge, Source
 from src.service.note_ingest import delete_obsidian_note, ingest_obsidian_note, move_obsidian_note
 from src.service.watcher import (
-    OBSIDIAN_PATH_ENV,
     OBSIDIAN_PATHS_ENV,
     ObsidianEventHandler,
     obsidian_paths_from_env,
@@ -239,15 +238,5 @@ def test_obsidian_paths_from_env_supports_multiple_paths(monkeypatch, tmp_path: 
         OBSIDIAN_PATHS_ENV,
         f"{vault_a}{os.pathsep}{vault_b}{os.pathsep}{vault_a}{os.pathsep}{missing}",
     )
-    monkeypatch.delenv(OBSIDIAN_PATH_ENV, raising=False)
 
     assert obsidian_paths_from_env() == [vault_a.resolve(), vault_b.resolve()]
-
-
-def test_obsidian_paths_from_env_falls_back_to_single_path(monkeypatch, tmp_path: Path) -> None:
-    vault = tmp_path / "vault"
-    vault.mkdir()
-    monkeypatch.delenv(OBSIDIAN_PATHS_ENV, raising=False)
-    monkeypatch.setenv(OBSIDIAN_PATH_ENV, str(vault))
-
-    assert obsidian_paths_from_env() == [vault.resolve()]
