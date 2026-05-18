@@ -66,7 +66,7 @@ Hard problem touch: no
 `/iterate` command: `/iterate scaffold FastAPI project with SQLite via SQLAlchemy, Alembic migrations for sources/chunks/graph_edges/recall_logs tables, health endpoint`
 
 ### F2 — Claude Code prompt event trigger | P0
-Files: `src/api/events.py`, `src/service/recall_trigger.py`, `hooks/guardian_hook.sh`
+Files: `src/api/events.py`, `src/schemas/events.py`, `src/service/recall_trigger.py`, `hooks/guardian_hook.sh`
 Success gate: `POST /events/prompt` → 현재 작업 컨텍스트로 Recall 호출, 짧은 프롬프트 length filter discard 확인, 장기 chunk 저장 없음
 Hard problem touch: no
 `/iterate` command: `/iterate implement POST /events/prompt endpoint for Claude Code UserPromptSubmit hook — length filter (50 tokens), call recall trigger with current prompt context, do not persist prompt as long-term chunks. Include guardian_hook.sh that curls this endpoint.`
