@@ -58,7 +58,7 @@ Guardian은 로컬 작업 흐름을 지속적으로 수집해요.
 
 Markdown 파일 변경을 filesystem watcher로 감지해요.
 
-추적 이벤트:
+추적 이벤트
 
 - create
 - update
