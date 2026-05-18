@@ -217,6 +217,9 @@ data/
 instance/
 .webassets-cache
 
+# Local Guardian config
+.env
+
 # Scrapy stuff:
 .scrapy
 

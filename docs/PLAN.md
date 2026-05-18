@@ -72,7 +72,7 @@ Hard problem touch: no
 `/iterate` command: `/iterate implement POST /events/prompt endpoint for Claude Code UserPromptSubmit hook — length filter (50 tokens), call recall trigger with current prompt context, do not persist prompt as long-term chunks. Include guardian_hook.sh that curls this endpoint.`
 
 ### F3 — Capture: Obsidian watchdog | P0
-Files: `src/service/watcher.py`, `src/crud/source.py` (update/delete)
+Files: `src/service/watcher.py`, `src/service/note_ingest.py`, `src/crud/source.py`, `src/crud/chunk.py` (update/delete)
 Success gate: 파일 create/update/delete/move 이벤트 → SQLite 반영, 300ms debounce 동작
 Hard problem touch: no
 `/iterate` command: `/iterate implement Obsidian watchdog as FastAPI lifespan background task using watchdog library — handle create/update/delete/move events with 300ms debounce, call ingest service directly (no HTTP)`
@@ -119,8 +119,8 @@ Hard problem touch: no
 - angel_message 121자 → 120자로 truncation
 
 ### Integration tests
-- watchdog create event → SQLite sources+chunks 저장, Chroma 벡터 저장
-- watchdog delete event → sources soft delete + chunks + graph_edges + Chroma 벡터 cascade 삭제
+- watchdog create event → SQLite sources+chunks 저장
+- watchdog delete event → sources soft delete + chunks + graph_edges 삭제
 - watchdog move event → sources.path 업데이트
 - `POST /events/prompt` 짧은 프롬프트 → length filter discard + 장기 chunk 저장 없음
 - Git checkpoint capture → commit_sha 기준 source+chunks 저장, 중복 commit_sha 재수집 방지
