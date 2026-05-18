@@ -105,11 +105,10 @@ MVP에서는 hook 범위를 제한했어요.
 
 문서는 chunk 단위로 분할해요.
 
-목표:
-
-- retrieval precision 개선
-- embedding noise 감소
-- semantic edge 품질 향상
+목표 
+- 검색 정확도 (retrieval precision) 개선
+- 임베딩에 들어가는 잡음 (embedding noise) 감소
+- 의미 그래프의 엣지 품질 (semantic edge quality) 개선
 
 | 입력 유형 | 전략 |
 |---|---|
@@ -129,8 +128,6 @@ Overlap은 chunk 경계에서 의미가 끊기는 문제를 줄이기 위한 설
 ## Embedding & Graph
 
 Chunk는 embedding vector로 변환해요.
-
-활용 방식은 두 가지예요.
 
 1. Chroma에 저장해서 semantic retrieval에 사용해요
 2. 유사 chunk 간 edge를 생성해서 graph를 구성해요
