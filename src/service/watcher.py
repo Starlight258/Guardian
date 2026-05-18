@@ -75,9 +75,11 @@ class ObsidianEventHandler(FileSystemEventHandler):
 
         old_path = Path(str(event.src_path))
         new_path = Path(str(event.dest_path))
+        if old_path.suffix.lower() != ".md" and new_path.suffix.lower() != ".md":
+            return
 
         self._debouncer.schedule(
-            f"move:{old_path}:{new_path}",
+            f"file:{old_path}",
             lambda: self._with_session(move_obsidian_note, old_path=old_path, new_path=new_path),
         )
 

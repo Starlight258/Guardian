@@ -194,7 +194,6 @@ def test_move_obsidian_note_merges_when_target_source_exists(tmp_path: Path) -> 
         ingest_obsidian_note(session, path=new_path)
 
     old_path.unlink()
-    new_path.write_text("moved content wins", encoding="utf-8")
     with session_factory() as session:
         move_obsidian_note(session, old_path=old_path, new_path=new_path)
 
@@ -208,7 +207,7 @@ def test_move_obsidian_note_merges_when_target_source_exists(tmp_path: Path) -> 
     assert len(active_sources) == 1
     assert deleted_old is None
     assert len(chunks) == 1
-    assert chunks[0].text == "moved content wins"
+    assert chunks[0].text == "new content"
 
 
 def test_watcher_debounces_repeated_create_events(tmp_path: Path) -> None:

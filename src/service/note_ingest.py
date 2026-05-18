@@ -27,7 +27,4 @@ def delete_obsidian_note(session: Session, *, path: Path) -> None:
 
 def move_obsidian_note(session: Session, *, old_path: Path, new_path: Path) -> None:
     move_obsidian_note_source(session, old_path=old_path, new_path=new_path)
-    if new_path.exists():
-        ingest_obsidian_note(session, path=new_path)
-        return
     session.commit()
