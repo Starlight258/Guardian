@@ -144,8 +144,7 @@ Chunk는 embedding vector로 변환해요.
 | Chroma | vector storage |
 
 `chunk.id`는 두 저장소에서 동일하게 사용해요.
-
-별도 mapping layer 없이 retrieval 경로를 단순화하기 위한 결정이에요.
+> 별도 mapping layer 없이 retrieval 경로를 단순화하기 위한 결정이에요.
 
 | 선택 | 장점 | 비용 |
 |---|---|---|
@@ -201,7 +200,7 @@ score ≥ threshold ?
     └─ No  → Drop
 ```
 
-Guardrails는 별도 agent가 아니라 단순 후처리 함수예요.
+Guardrails는 별도 agent가 아닌 단순 후처리 함수로 구현해요.
 
 | 선택 | 장점 | 비용 |
 |---|---|---|
