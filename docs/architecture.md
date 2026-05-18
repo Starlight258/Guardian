@@ -1,112 +1,247 @@
-# Guardian
+# Architecture
 
-<p align="center">
-  <img src="./assets/guardian-cli-angel-terminal-animated.png" width="920" alt="Guardian CLI Angel" />
-</p>
+Guardian은 AI 작업 과정에서 생성되는 노트와 프롬프트를 수집하고,  
+의미 기반 연결을 구축하는 개인 기억 저장소예요.
 
-<p align="center">
-  <b>Capture → Connect → Recall</b>
-</p>
+> `Capture → Connect → Recall`
 
-<p align="center">
-AI와 함께 만든 생각의 흔적을 자동으로 모으고, 연결하고, 다시 꺼내주는 개인 지식 그래프예요.
-</p>
-
----
-
-## What is Guardian?
-
-AI와 작업하다 보면 비슷한 질문을 반복하게 돼요. 예전에 정리했던 노트나 프롬프트가 있어도, 코딩 중에는 다시 찾지 않게 돼요.
-
-Guardian은 Obsidian 노트와 Claude Code 프롬프트를 자동으로 수집하고, 의미 기반으로 연결해서 하나의 그래프로 정리해줘요. 현재 작업과 비슷한 과거 맥락이 감지되면 Angel이 짧은 메시지를 띄워요.
-
-MVP는 개인 AI 학습 흐름의 기억 보조 레이어에 집중해요.
-
----
-
-## Memory Graph
-
-<p align="center">
-  <img src="./assets/guardian-dashboard.png" width="920" alt="Guardian Dashboard" />
-</p>
-
----
-
-## Architecture
+전체 흐름은 아래와 같아요.
 
 ```mermaid
 flowchart LR
-  A[Obsidian Notes] --> C[Capture Layer]
-  B[Claude Code Prompts] --> C
-  C --> D[Semantic Processing]
-  D --> E[Knowledge Graph\nGraphRAG]
-  E --> F[Recall Agent\nquery rewrite + retrieval + response]
-  F --> H{Guardrails\nconfidence threshold}
-  H -->|pass| I[Angel + Dashboard]
-  H -->|block| J[silent drop]
+    A[Obsidian Notes] --> C[Capture Layer]
+    B[Claude Code Prompts] --> C
+
+    C --> LF[Length Filter]
+
+    LF -->|pass| D[Chunking]
+    LF -->|drop| X[Discard]
+
+    D --> E[Embedding]
+
+    E --> F[Graph Builder]
+
+    F --> G[(SQLite)]
+    E --> H[(Chroma)]
+
+    G --> RC[Recall Agent]
+    H --> RC
+
+    RC --> GR{Guardrails}
+
+    GR -->|pass| J[Angel]
+    GR -->|block| Y[Drop]
 ```
 
----
-
-## Tech Stack
-
-| Layer | Choice |
+| 단계 | 역할 |
 |---|---|
-| Language | Python 3.11+ |
-| Backend | FastAPI |
-| Metadata | SQLite |
-| Vector DB | Chroma |
-| Graph | NetworkX |
-| GraphRAG | Chroma + NetworkX (semantic + structural traversal) |
-| Agent Layer | Single LLM call (query rewrite + retrieval + response in one prompt) |
-| Guardrails | Confidence scoring — threshold-based Angel trigger |
-| Frontend | React + Vite + d3.js |
-| Claude integration | MCP Server + Hooks |
-| Evaluation | RAGAS |
+| Capture | 노트와 프롬프트를 수집해요 |
+| Connect | Chunking · Embedding · Graph를 구축해요 |
+| Recall | 검색 · 응답 · Guardrails를 처리해요 |
 
 ---
 
-## Angel Flow
+# Capture
 
-Angel이 뜨기까지의 단일 에이전트 파이프라인이에요.
+Guardian은 로컬 작업 흐름을 지속적으로 수집해요.  
+수동 sync 단계는 없어요.
 
-**Recall Agent** — 현재 작업 컨텍스트를 받아서 하나의 LLM call 안에서 검색 쿼리를 재작성하고, Chroma 벡터 검색과 NetworkX 그래프 순회를 조합해 관련 청크를 선별하고, Angel 메시지를 생성해요. 메시지에는 근거가 되는 노트가 함께 첨부돼요.
+## Obsidian
 
-**Guardrails** — Recall Agent 출력의 관련성 점수가 threshold 아래면 Angel을 silent drop해요. False positive를 막아서 Angel이 의미 있을 때만 떠요.
+Markdown 파일 변경을 filesystem watcher로 감지해요.
 
-> Multi-agent (Retrieval / Response 분리) 는 의도적으로 채택하지 않았어요. Angel은 백그라운드 트리거라 지연이 곧 UX 손상이고, 현 단계에서는 single call로 품질이 충분해요. RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 그때 분리해요.
+추적 이벤트:
 
----
+- create
+- update
+- delete
 
-## Data Sources
+## Claude Code
 
-| Source | Capture Method |
+Claude Code hook으로 아래 이벤트를 수집해요.
+
+- user prompt
+- assistant response
+- timestamp
+- session metadata
+
+MVP에서는 hook 범위를 제한했어요.
+
+| 선택 | 이유 |
 |---|---|
-| Obsidian notes | `watchdog` filesystem watcher |
-| Claude Code prompts | `UserPromptSubmit` hook |
+| 제한된 hook 지원 | ingestion 구조를 단순하게 유지해요 |
+| 최소 이벤트만 저장 | replay / debugging이 쉬워져요 |
+| session 전체 미수집 | 운영 복잡도를 줄여요 |
 
 ---
 
-## Roadmap
+# Connect
 
-| Week | Milestone |
+수집된 텍스트는 검색 전에 가공해요.
+
+## Length Filter
+
+짧은 프롬프트는 저장하지 않아요.
+
+예:
+
+- ok
+- thanks
+- ㄱㅅ
+
+낮은 signal 데이터를 early discard해서 저장 비용과 retrieval noise를 줄여요.
+
+---
+
+## Chunking
+
+문서는 chunk 단위로 분할해요.
+
+목표:
+
+- retrieval precision 개선
+- embedding noise 감소
+- semantic edge 품질 향상
+
+| 입력 유형 | 전략 |
 |---|---|
-| 1-2 | Capture infrastructure |
-| 3-4 | Knowledge graph dashboard |
-| 5 | Recall Agent + Guardrails |
-| 6 | MCP integration |
+| 구조화된 노트 | Header 기반 split |
+| 비구조화 노트 | Sliding window |
+| 짧은 프롬프트 | filter 단계에서 제외 |
+
+| 항목 | 값 |
+|---|---|
+| Chunk size | 512 tokens |
+| Overlap | 20% |
+
+Overlap은 chunk 경계에서 의미가 끊기는 문제를 줄이기 위한 설정이에요.
 
 ---
 
-## Status
+## Embedding & Graph
+
+Chunk는 embedding vector로 변환해요.
+
+활용 방식은 두 가지예요.
+
+1. Chroma에 저장해서 semantic retrieval에 사용해요
+2. 유사 chunk 간 edge를 생성해서 graph를 구성해요
+
+---
+
+# Storage
+
+데이터는 역할별로 분리 저장해요.
+
+| 저장소 | 역할 |
+|---|---|
+| SQLite | metadata |
+| Chroma | vector storage |
+
+`chunk.id`는 두 저장소에서 동일하게 사용해요.
+
+별도 mapping layer 없이 retrieval 경로를 단순화하기 위한 결정이에요.
+
+| 선택 | 장점 | 비용 |
+|---|---|---|
+| Shared chunk ID | retrieval 경로가 단순해져요 | storage coupling이 증가해요 |
+| Storage 분리 | 역할 분리가 명확해져요 | consistency 관리가 필요해요 |
+| Mapping layer 제거 | 운영이 단순해져요 | abstraction이 약해져요 |
+
+---
+
+# Recall
+
+Recall은 단일 LLM call로 처리해요.
+
+하나의 prompt 안에서 아래 작업이 함께 수행돼요.
+
+1. query rewrite
+2. vector retrieval
+3. graph traversal
+4. response generation
 
 ```text
-Status: Designing
-Implementation starts: June 2026
+context
+   │
+   ▼
+Single LLM Call
+  ├─ query rewrite
+  ├─ vector retrieval
+  ├─ graph traversal
+  └─ response generation
+          │
+          ▼
+   relevance score
+          │
+          ▼
+      Guardrails
 ```
+
+## Single Call을 선택한 이유
+
+Angel은 작업 흐름 중간에 백그라운드로 실행돼요.
+
+그래서 latency가 주요 설계 기준이에요.
+
+| 항목 | Single | Multi-agent |
+|---|---|---|
+| LLM calls | 1 | 2+ |
+| Latency | 낮아요 | 높아요 |
+| Debugging surface | 작아요 | 커져요 |
+| Token cost | 낮아요 | 높아요 |
+
+Multi-agent의 분리 이점보다 응답 속도를 우선했어요.
 
 ---
 
-## License
+# Guardrails
 
-MIT
+Recall Agent는 relevance score를 함께 반환해요.
+
+threshold 미만이면 Angel을 띄우지 않고 drop해요.
+
+```text
+Recall Agent
+    ↓
+[message + relevance score]
+    ↓
+score ≥ threshold ?
+    ├─ Yes → Angel
+    └─ No  → Drop
+```
+
+Guardrails는 별도 agent가 아니라 단순 후처리 함수예요.
+
+| 선택 | 장점 | 비용 |
+|---|---|---|
+| Single LLM call | 저지연 · 저비용 | prompt 복잡도가 증가해요 |
+| In-prompt rewrite | 단계가 줄어들어요 | 모델 의존성이 증가해요 |
+| Post-hoc guardrails | 구조가 단순해져요 | calibration이 필요해요 |
+
+---
+
+# Intentional Non-Adoption
+
+| 기술 | 제외 이유 | 도입 조건 |
+|---|---|---|
+| Multi-agent | Single call로 충분해요 | latency보다 품질이 중요해질 때 |
+| Airflow | cron 수준으로 충분해요 | ingestion source가 증가할 때 |
+| Elasticsearch | semantic retrieval 중심이에요 | full-text 요구가 커질 때 |
+| Kubernetes | 단일 컨테이너 운영이에요 | multi-host 배포가 필요할 때 |
+| Neo4j | NetworkX로 충분해요 | graph 규모가 커질 때 |
+
+---
+
+# Evolution Triggers
+
+아래 조건 중 하나라도 발생하면 Recall 구조를 분리해요.
+
+| Signal | Threshold | 대응 |
+|---|---|---|
+| RAGAS precision | < 0.6 | Retrieval을 분리해요 |
+| False positive rate | > 30% | Response layer를 분리해요 |
+| Prompt length | > 800 tokens | 단계를 분리해요 |
+| 모델 차등화 필요 | — | retrieval / response를 분리해요 |
+
+측정값이 나오기 전까지는 agent를 분리하지 않아요.
