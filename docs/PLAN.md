@@ -49,6 +49,8 @@ Claude Code prompt event로 현재 작업과 관련된 과거 맥락을 조회�
 - `angel_message` 저장은 기본 활성화하되 config로 비활성화 가능
 - `/recall` MCP tool + 대시보드 수동 검색 양쪽에서 호출
 - 인증 없음 (단일 사용자, 로컬 전용)
+- LLM 호출은 `LLMClient` Protocol로 추상화 — `AnthropicLLMClient` / `LocalLLMClient` 구현, `GUARDIAN_LLM_PROVIDER` 환경변수로 전환
+- Circuit Breaker: Anthropic API 5xx/timeout → 로컬 LLM(Ollama) 자동 전환, 복구 감지 후 Anthropic 복귀. Model Router 없음 — LLM call point가 단일 Recall Agent 하나이므로 Circuit Breaker로 충분
 
 ## Constraints
 
@@ -102,6 +104,12 @@ Files: `src/service/recall.py`, `src/api/recall.py`
 Success gate: `POST /recall` → tool_use output 파싱, relevance_score ≥ 0.7 시 angel_triggered=True, evidence_sources 포함, recall_logs에 input_hash/retrieved_chunk_ids/evidence_source_ids/drop_reason/angel_message 저장
 Hard problem touch: **yes**
 `/iterate` command: `/iterate implement Recall Agent — POST /recall endpoint, current context → Chroma top-k=5 retrieval → NetworkX neighbor injection, then single Claude LLM call with tool_use forced (angel_output tool: chunk_ids, evidence_sources, relevance_score, angel_message maxLength 120), Guardrails post-processing, save recall_logs with input_hash/retrieved_chunk_ids/evidence_source_ids/drop_reason/angel_message, with angel_message persistence configurable`
+
+### F9 — LLM Resilience Layer | P2
+Files: `src/llm.py`
+Success gate: `AnthropicLLMClient` 정상 동작 확인, Anthropic 5xx mock → `LocalLLMClient` 자동 전환, 복구 후 Anthropic 복귀 확인
+Hard problem touch: no
+`/iterate` command: `/iterate implement LLMClient Protocol with AnthropicLLMClient and LocalLLMClient (Ollama OpenAI-compatible endpoint), add Circuit Breaker wrapper that detects Anthropic API failures and falls back to local LLM, then recovers when Anthropic is healthy`
 
 ### F8 — MCP Server | P1
 Files: `src/mcp_server.py`

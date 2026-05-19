@@ -169,6 +169,17 @@ Chunk는 embedding vector로 변환해요.
 
 Recall은 단일 LLM call로 처리해요.
 
+LLM 호출은 `LLMClient` Protocol로 추상화해요.
+
+```
+LLMClient (Protocol)
+├── AnthropicLLMClient  → Claude API
+└── LocalLLMClient      → Ollama (OpenAI 호환 엔드포인트)
+```
+
+`GUARDIAN_LLM_PROVIDER` 환경변수로 백엔드를 전환해요.
+Anthropic API 장애 시 Circuit Breaker가 자동으로 로컬 LLM으로 전환하고, 복구 감지 후 다시 Anthropic으로 돌아와요.
+
 LLM 호출 전에 retrieval context를 먼저 구성해요.
 
 1. 현재 작업 컨텍스트로 Chroma top-k retrieval
@@ -219,6 +230,8 @@ Guardrails는 별도 agent가 아닌 단순 후처리 함수로 구현해요.
 | Single LLM call | 저지연 · 저비용 | prompt 복잡도가 증가해요 |
 | Query rewrite 제외 | retrieval 흐름이 단순해요 | 검색 품질 튜닝 여지가 줄어요 |
 | Post-hoc guardrails | 구조가 단순해져요 | calibration이 필요해요 |
+| LLMClient Protocol | 백엔드 교체·테스트 용이 | 구현체 추가 필요해요 |
+| Circuit Breaker | API 장애 시 자동 fallback | 로컬 LLM 품질이 낮을 수 있어요 |
 
 ---
 
@@ -227,6 +240,7 @@ Guardrails는 별도 agent가 아닌 단순 후처리 함수로 구현해요.
 | 기술 | 제외 이유 | 도입 조건 |
 |---|---|---|
 | Multi-agent | Single call로 충분해요 | latency보다 품질이 중요해질 때 |
+| Model Router (동적 라우팅) | LLM call point가 하나라 불필요해요 | 요청 다양성이 생길 때 |
 | Airflow | cron 수준으로 충분해요 | ingestion source가 증가할 때 |
 | Elasticsearch | semantic retrieval 중심이에요 | full-text 요구가 커질 때 |
 | Kubernetes | 단일 컨테이너 운영이에요 | multi-host 배포가 필요할 때 |
