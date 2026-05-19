@@ -75,7 +75,9 @@ Angel이 뜨기까지의 단일 에이전트 파이프라인이에요.
 
 **Guardrails** : Recall Agent 출력의 관련성 점수가 threshold 아래면 Angel을 silent drop해요. False positive를 막아서 Angel이 의미 있을 때만 떠요.
 
-> LLM 기반 query rewrite와 multi-agent 구조는 의도적으로 채택하지 않았어요. Angel은 백그라운드 트리거라 지연이 곧 UX 손상이고, 현 단계에서는 현재 작업 컨텍스트 기반 retrieval + single LLM response로 품질이 충분하다고 봐요. RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 그때 분리해요.
+> LLM 기반 query rewrite와 multi-agent 구조는 의도적으로 채택하지 않았어요. 
+Angel은 백그라운드 트리거라 지연이 길어지면 안되기 때문이에요. 
+RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 그때 분리해요.
 
 ---
 
