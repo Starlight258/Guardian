@@ -40,8 +40,7 @@ MVP는 개인 AI 학습 흐름의 기억 보조 레이어에 집중해요.
 uv run uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
-API docs:
-- http://127.0.0.1:8000/docs
+API docs: http://127.0.0.1:8000/docs
 
 ### 2. Frontend
 
@@ -51,8 +50,7 @@ npm install
 npm run dev
 ```
 
-Dashboard:
-- http://127.0.0.1:5173
+Dashboard: http://127.0.0.1:5173
 
 ---
 
@@ -84,8 +82,8 @@ flowchart LR
 | Graph | NetworkX |
 | GraphRAG | Chroma + NetworkX (semantic + structural traversal) |
 | Agent Layer | Retrieval before LLM + single LLM response call |
-| LLM Resilience | Circuit Breaker — Anthropic API 장애 시 Ollama 자동 전환 |
-| Guardrails | Confidence scoring — threshold-based Angel trigger |
+| LLM Resilience | Circuit Breaker (Anthropic API 장애 시 Ollama 자동 전환) |
+| Guardrails | Confidence scoring (threshold-based Angel trigger) |
 | Frontend | React + Vite + d3.js |
 | Claude integration | MCP Server + Hooks |
 | Evaluation | RAGAS |
