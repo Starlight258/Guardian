@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import threading
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -17,9 +18,8 @@ from src.deps import get_db
 from src.main import app
 from src.models import Chunk, GraphEdge, Source
 from src.service.checkpoint import (
-    GitCheckpoint,
-    capture_git_checkpoint,
-    checkpoint_from_git,
+    SessionCheckpoint,
+    capture_session_checkpoint,
 )
 from src.service.embed import VectorSearchResult
 from src.service.graph import GraphService
@@ -73,56 +73,50 @@ class FakeVectorStore:
             self.embeddings.pop(chunk_id, None)
 
 
-def test_capture_git_checkpoint_stores_source_chunk_metadata_and_connects_graph() -> None:
+def test_capture_session_checkpoint_stores_source_chunk_metadata_and_connects_graph() -> None:
     session_factory = make_session_factory()
     graph_service = FakeGraphService()
-    checkpoint = GitCheckpoint(
-        commit_sha="a" * 40,
-        commit_message="feat: add memory graph",
-        branch="main",
-        changed_files=["src/service/checkpoint.py", "tests/test_checkpoint.py"],
-        session_summary="Implemented checkpoint capture.",
+    checkpoint = SessionCheckpoint(
+        session_id="session-1",
+        session_summary="Implemented session checkpoint capture.",
+        metadata={"cwd": "/tmp/guardian"},
     )
 
     with session_factory() as session:
-        change = capture_git_checkpoint(
+        change = capture_session_checkpoint(
             session,
             checkpoint=checkpoint,
             graph_service=graph_service,
         )
 
     with session_factory() as session:
-        source = session.scalar(select(Source).where(Source.commit_sha == checkpoint.commit_sha))
+        source = session.scalar(select(Source).where(Source.session_id == checkpoint.session_id))
         chunks = list(session.scalars(select(Chunk)))
 
     assert change.changed is True
     assert source is not None
-    assert source.source_type == "git_checkpoint"
+    assert source.source_type == "session_checkpoint"
     assert source.metadata_json == {
-        "branch": "main",
-        "changed_files": ["src/service/checkpoint.py", "tests/test_checkpoint.py"],
-        "commit_message": "feat: add memory graph",
-        "session_summary": "Implemented checkpoint capture.",
+        "cwd": "/tmp/guardian",
+        "session_id": "session-1",
+        "session_summary": "Implemented session checkpoint capture.",
     }
     assert len(chunks) == 1
     assert chunks[0].source_id == source.id
-    assert "Commit: " + checkpoint.commit_sha in chunks[0].text
-    assert "- src/service/checkpoint.py" in chunks[0].text
+    assert "Session: session-1" in chunks[0].text
+    assert "Implemented session checkpoint capture." in chunks[0].text
     assert graph_service.connected_chunk_ids == [chunks[0].id]
 
 
-def test_capture_git_checkpoint_splits_long_session_summary() -> None:
+def test_capture_session_checkpoint_splits_long_session_summary() -> None:
     session_factory = make_session_factory()
-    checkpoint = GitCheckpoint(
-        commit_sha="c" * 40,
-        commit_message="feat: summarize long session",
-        branch="main",
-        changed_files=["src/service/checkpoint.py"],
+    checkpoint = SessionCheckpoint(
+        session_id="session-2",
         session_summary=" ".join(f"token{i}" for i in range(700)),
     )
 
     with session_factory() as session:
-        change = capture_git_checkpoint(session, checkpoint=checkpoint)
+        change = capture_session_checkpoint(session, checkpoint=checkpoint)
 
     with session_factory() as session:
         chunks = list(session.scalars(select(Chunk).order_by(Chunk.chunk_index)))
@@ -133,7 +127,7 @@ def test_capture_git_checkpoint_splits_long_session_summary() -> None:
     assert all(chunk.token_count <= 512 for chunk in chunks)
 
 
-def test_capture_git_checkpoint_creates_graph_edges_for_similar_checkpoint_chunks() -> None:
+def test_capture_session_checkpoint_creates_graph_edges_for_similar_checkpoint_chunks() -> None:
     session_factory = make_session_factory()
     vector_store = FakeVectorStore()
     graph_service = GraphService(
@@ -143,25 +137,19 @@ def test_capture_git_checkpoint_creates_graph_edges_for_similar_checkpoint_chunk
         top_k=5,
     )
 
-    first = GitCheckpoint(
-        commit_sha="d" * 40,
-        commit_message="feat: first checkpoint",
-        branch="main",
-        changed_files=["src/first.py"],
+    first = SessionCheckpoint(
+        session_id="session-3",
         session_summary="memory graph work",
     )
-    second = GitCheckpoint(
-        commit_sha="e" * 40,
-        commit_message="feat: second checkpoint",
-        branch="main",
-        changed_files=["src/second.py"],
+    second = SessionCheckpoint(
+        session_id="session-4",
         session_summary="memory graph follow up",
     )
 
     with session_factory() as session:
-        capture_git_checkpoint(session, checkpoint=first, graph_service=graph_service)
+        capture_session_checkpoint(session, checkpoint=first, graph_service=graph_service)
     with session_factory() as session:
-        capture_git_checkpoint(session, checkpoint=second, graph_service=graph_service)
+        capture_session_checkpoint(session, checkpoint=second, graph_service=graph_service)
 
     with session_factory() as session:
         edges = list(session.scalars(select(GraphEdge)))
@@ -172,21 +160,18 @@ def test_capture_git_checkpoint_creates_graph_edges_for_similar_checkpoint_chunk
     assert graph_service.graph.number_of_edges() >= 1
 
 
-def test_capture_git_checkpoint_dedupes_by_commit_sha() -> None:
+def test_capture_session_checkpoint_dedupes_by_session_id() -> None:
     session_factory = make_session_factory()
     graph_service = FakeGraphService()
-    checkpoint = GitCheckpoint(
-        commit_sha="b" * 40,
-        commit_message="fix: keep checkpoint idempotent",
-        branch="main",
-        changed_files=["src/service/checkpoint.py"],
+    checkpoint = SessionCheckpoint(
+        session_id="session-5",
         session_summary="First summary.",
     )
 
     with session_factory() as session:
-        first = capture_git_checkpoint(session, checkpoint=checkpoint, graph_service=graph_service)
+        first = capture_session_checkpoint(session, checkpoint=checkpoint, graph_service=graph_service)
     with session_factory() as session:
-        second = capture_git_checkpoint(session, checkpoint=checkpoint, graph_service=graph_service)
+        second = capture_session_checkpoint(session, checkpoint=checkpoint, graph_service=graph_service)
 
     with session_factory() as session:
         sources = list(session.scalars(select(Source)))
@@ -214,11 +199,9 @@ def test_checkpoint_event_updates_app_graph_service() -> None:
         response = client.post(
             "/events/checkpoint",
             json={
-                "commit_sha": "f" * 40,
-                "commit_message": "feat: endpoint capture",
-                "branch": "main",
-                "changed_files": ["src/api/events.py"],
+                "session_id": "session-6",
                 "session_summary": "Captured through the running app.",
+                "metadata": {"cwd": "/tmp/guardian"},
             },
         )
     finally:
@@ -231,46 +214,23 @@ def test_checkpoint_event_updates_app_graph_service() -> None:
     assert graph_service.connected_chunk_ids
 
 
-def test_checkpoint_from_git_collects_commit_metadata(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init")
-    _git(repo, "config", "user.email", "guardian@example.com")
-    _git(repo, "config", "user.name", "Guardian")
-    note = repo / "note.md"
-    note.write_text("memory", encoding="utf-8")
-    _git(repo, "add", "note.md")
-    _git(repo, "commit", "-m", "docs: add note")
-
-    checkpoint = checkpoint_from_git(repo)
-
-    assert len(checkpoint.commit_sha) == 40
-    assert checkpoint.commit_message == "docs: add note"
-    assert checkpoint.branch in {"main", "master"}
-    assert checkpoint.changed_files == ["note.md"]
-    assert checkpoint.session_summary == "docs: add note"
-
-
-def test_post_commit_hook_falls_back_to_rule_based_summary_without_entire_checkpoint_trailer(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init")
-    _git(repo, "config", "user.email", "guardian@example.com")
-    _git(repo, "config", "user.name", "Guardian")
-    note = repo / "note.md"
-    note.write_text("memory", encoding="utf-8")
-    _git(repo, "add", "note.md")
-    _git(repo, "commit", "-m", "docs: add note")
+def test_session_checkpoint_hook_posts_payload_from_stdin(tmp_path: Path) -> None:
     server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
     thread = threading.Thread(target=server.handle_request)
     thread.start()
 
     try:
         subprocess.run(
-            [str(Path("hooks/post_commit_guardian.sh").resolve())],
-            cwd=repo,
+            [str(Path("hooks/session_checkpoint_guardian.sh").resolve())],
+            cwd=tmp_path,
+            input=json.dumps(
+                {
+                    "session_id": "session-7",
+                    "session_summary": "Rule-based checkpoint summary.",
+                    "metadata": {"source": "session-end"},
+                }
+            ),
+            text=True,
             env={
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
                 "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
@@ -282,45 +242,26 @@ def test_post_commit_hook_falls_back_to_rule_based_summary_without_entire_checkp
         server.server_close()
 
     payload = server.payload
-    assert payload["commit_message"] == "docs: add note"
-    assert payload["changed_files"] == ["note.md"]
-    assert payload["session_summary"] == (
-        "Rule-based checkpoint summary.\n"
-        "Commit message: docs: add note\n"
-        "Changed files (1): note.md"
-    )
+    assert payload["session_id"] == "session-7"
+    assert payload["session_summary"] == "Rule-based checkpoint summary."
+    assert payload["metadata"] == {"source": "session-end"}
 
 
-def test_post_commit_hook_groups_question_marks_in_rule_based_summary(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init")
-    _git(repo, "config", "user.email", "guardian@example.com")
-    _git(repo, "config", "user.name", "Guardian")
-    note = repo / "note.md"
-    note.write_text("memory", encoding="utf-8")
-    _git(repo, "add", "note.md")
-    _git(
-        repo,
-        "commit",
-        "-m",
-        "docs: record decisions",
-        "-m",
-        "Should Guardian keep fallback summaries? What should Entire own?",
-    )
+def test_session_checkpoint_hook_wraps_raw_text_payload(tmp_path: Path) -> None:
     server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
     thread = threading.Thread(target=server.handle_request)
     thread.start()
 
     try:
         subprocess.run(
-            [str(Path("hooks/post_commit_guardian.sh").resolve())],
-            cwd=repo,
+            [str(Path("hooks/session_checkpoint_guardian.sh").resolve())],
+            cwd=tmp_path,
+            input="Rule-based checkpoint summary from session end.",
+            text=True,
             env={
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
                 "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
+                "GUARDIAN_SESSION_ID": "session-8",
             },
             check=True,
         )
@@ -329,121 +270,100 @@ def test_post_commit_hook_groups_question_marks_in_rule_based_summary(
         server.server_close()
 
     payload = server.payload
-    assert payload["session_summary"] == (
-        "Rule-based checkpoint summary.\n"
-        "Commit message: docs: record decisions\n\n"
-        "Should Guardian keep fallback summaries? What should Entire own?\n"
-        "Questions:\n"
-        "- Should Guardian keep fallback summaries? What should Entire own?\n"
-        "Changed files (1): note.md"
-    )
+    assert payload["session_id"] == "session-8"
+    assert payload["session_summary"] == "Rule-based checkpoint summary from session end."
+    assert payload["metadata"] == {"source": "session-end"}
 
 
-def test_post_commit_hook_groups_question_keywords_in_rule_based_summary(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init")
-    _git(repo, "config", "user.email", "guardian@example.com")
-    _git(repo, "config", "user.name", "Guardian")
-    note = repo / "note.md"
-    note.write_text("memory", encoding="utf-8")
-    _git(repo, "add", "note.md")
-    _git(
-        repo,
-        "commit",
-        "-m",
-        "docs: record fallback policy",
-        "-m",
-        "왜 Entire 없을 때도 저장해야 하는지 고민. 다음에는 summary 품질을 생각.",
-    )
-    server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
-    thread = threading.Thread(target=server.handle_request)
-    thread.start()
-
-    try:
-        subprocess.run(
-            [str(Path("hooks/post_commit_guardian.sh").resolve())],
-            cwd=repo,
-            env={
-                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
-                "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
-            },
-            check=True,
-        )
-    finally:
-        thread.join(timeout=5)
-        server.server_close()
-
-    payload = server.payload
-    assert payload["session_summary"] == (
-        "Rule-based checkpoint summary.\n"
-        "Commit message: docs: record fallback policy\n\n"
-        "왜 Entire 없을 때도 저장해야 하는지 고민. 다음에는 summary 품질을 생각.\n"
-        "Questions:\n"
-        "- 왜 Entire 없을 때도 저장해야 하는지 고민. 다음에는 summary 품질을 생각.\n"
-        "Changed files (1): note.md"
-    )
+def _write_transcript(path: Path, messages: list[dict]) -> None:
+    with path.open("w", encoding="utf-8") as f:
+        for msg in messages:
+            f.write(json.dumps(msg) + "\n")
 
 
-def test_post_commit_hook_posts_entire_checkpoint_summary_from_external_repo(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init")
-    _git(repo, "config", "user.email", "guardian@example.com")
-    _git(repo, "config", "user.name", "Guardian")
-    note = repo / "note.md"
-    note.write_text("memory", encoding="utf-8")
-    _git(repo, "add", "note.md")
-    _git(repo, "commit", "-m", "docs: add note", "-m", "Entire-Checkpoint: captured")
-
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    entire = bin_dir / "entire"
-    entire.write_text(
-        "#!/usr/bin/env sh\n"
-        "if [ \"$1\" = \"checkpoint\" ] && [ \"$2\" = \"explain\" ]; then\n"
-        "  printf '%s\\n' 'Entire checkpoint summary'\n"
-        "  exit 0\n"
-        "fi\n"
-        "exit 1\n",
-        encoding="utf-8",
-    )
-    entire.chmod(0o755)
-
-    server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
-    thread = threading.Thread(target=server.handle_request)
-    thread.start()
-
-    try:
-        subprocess.run(
-            [str(Path("hooks/post_commit_guardian.sh").resolve())],
-            cwd=repo,
-            env={
-                "PATH": f"{bin_dir}:/usr/bin:/bin:/usr/sbin:/sbin",
-                "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
-            },
-            check=True,
-        )
-    finally:
-        thread.join(timeout=5)
-        server.server_close()
-
-    payload = server.payload
-    assert payload["commit_message"].startswith("docs: add note")
-    assert payload["changed_files"] == ["note.md"]
-    assert payload["session_summary"] == "Entire checkpoint summary"
-
-
-def _git(repo: Path, *args: str) -> str:
-    return subprocess.check_output(
-        ["git", "-C", str(repo), *args],
+def _run_transcript_summary(transcript_path: Path) -> dict | None:
+    hook_input = json.dumps({
+        "session_id": "test-session",
+        "transcript_path": str(transcript_path),
+        "cwd": "/tmp",
+    })
+    result = subprocess.run(
+        [sys.executable, str(Path("hooks/transcript_summary.py").resolve())],
+        input=hook_input,
         text=True,
-        stderr=subprocess.DEVNULL,
-    ).strip()
+        capture_output=True,
+    )
+    if not result.stdout.strip():
+        return None
+    return json.loads(result.stdout)
+
+
+def test_transcript_summary_separates_question_lines(tmp_path: Path) -> None:
+    transcript = tmp_path / "session.jsonl"
+    _write_transcript(transcript, [
+        {"role": "user", "content": [{"type": "text", "text": "왜 이렇게 설계했어?"}]},
+        {"role": "user", "content": [{"type": "text", "text": "guardian_hook.sh 연결해줘"}]},
+        {"role": "user", "content": [{"type": "text", "text": "이 부분 고민이 돼"}]},
+        {"role": "assistant", "content": [
+            {"type": "tool_use", "name": "Edit", "input": {"file_path": "hooks/guardian_hook.sh"}},
+        ]},
+    ])
+
+    payload = _run_transcript_summary(transcript)
+
+    assert payload is not None
+    summary = payload["session_summary"]
+    assert "## Questions" in summary
+    assert "왜 이렇게 설계했어?" in summary
+    assert "이 부분 고민이 돼" in summary
+    assert "## Requests" in summary
+    assert "guardian_hook.sh 연결해줘" in summary
+    assert "## Actions" in summary
+
+
+def test_transcript_summary_question_markers(tmp_path: Path) -> None:
+    transcript = tmp_path / "session.jsonl"
+    _write_transcript(transcript, [
+        {"role": "user", "content": [{"type": "text", "text": "뭐가 문제야?"}]},
+        {"role": "user", "content": [{"type": "text", "text": "생각해보면 이건 맞는 것 같아"}]},
+        {"role": "user", "content": [{"type": "text", "text": "구현해줘"}]},
+    ])
+
+    payload = _run_transcript_summary(transcript)
+
+    assert payload is not None
+    summary = payload["session_summary"]
+    assert "## Questions" in summary
+    assert "뭐가 문제야?" in summary
+    assert "생각해보면" in summary
+    assert "## Requests" in summary
+    assert "구현해줘" in summary
+
+
+def test_transcript_summary_only_requests_no_questions(tmp_path: Path) -> None:
+    transcript = tmp_path / "session.jsonl"
+    _write_transcript(transcript, [
+        {"role": "user", "content": [{"type": "text", "text": "entire 의존성 제거해줘"}]},
+        {"role": "assistant", "content": [
+            {"type": "tool_use", "name": "Write", "input": {"file_path": ".claude/settings.json"}},
+        ]},
+    ])
+
+    payload = _run_transcript_summary(transcript)
+
+    assert payload is not None
+    summary = payload["session_summary"]
+    assert "## Questions" not in summary
+    assert "## Requests" in summary
+
+
+def test_transcript_summary_empty_transcript_returns_none(tmp_path: Path) -> None:
+    transcript = tmp_path / "empty.jsonl"
+    transcript.write_text("")
+
+    payload = _run_transcript_summary(transcript)
+
+    assert payload is None
 
 
 class _CaptureServer(HTTPServer):
