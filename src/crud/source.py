@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,12 +14,26 @@ from src.utils import count_tokens, hash_text
 OBSIDIAN_SOURCE_TYPE = "obsidian_note"
 
 
+@dataclass(frozen=True)
+class SourceChunkChange:
+    source: Source
+    chunks: list[Chunk]
+    deleted_chunk_ids: list[str]
+    changed: bool
+
+
+@dataclass(frozen=True)
+class SourceDeleteChange:
+    source: Source | None
+    deleted_chunk_ids: list[str]
+
+
 def upsert_obsidian_note_source(
     session: Session,
     *,
     path: Path,
     content: str,
-) -> Source:
+) -> SourceChunkChange:
     normalized_path = str(path)
     source = session.scalar(
         select(Source).where(
@@ -41,29 +56,38 @@ def upsert_obsidian_note_source(
         session.flush()
     else:
         if source.content_hash == content_hash:
-            return source
+            return SourceChunkChange(
+                source=source,
+                chunks=[],
+                deleted_chunk_ids=[],
+                changed=False,
+            )
 
         source.title = path.stem
         source.content_hash = content_hash
 
-    replace_source_chunks(
+    chunk = Chunk(
+        id=str(uuid4()),
+        source_id=source.id,
+        chunk_index=0,
+        text=content,
+        token_count=count_tokens(content),
+        content_hash=content_hash,
+    )
+    deleted_chunk_ids = replace_source_chunks(
         session,
         source_id=source.id,
-        chunks=[
-            Chunk(
-                id=str(uuid4()),
-                source_id=source.id,
-                chunk_index=0,
-                text=content,
-                token_count=count_tokens(content),
-                content_hash=content_hash,
-            )
-        ],
+        chunks=[chunk],
     )
-    return source
+    return SourceChunkChange(
+        source=source,
+        chunks=[chunk],
+        deleted_chunk_ids=deleted_chunk_ids,
+        changed=True,
+    )
 
 
-def delete_obsidian_note_source(session: Session, *, path: Path) -> Source | None:
+def delete_obsidian_note_source(session: Session, *, path: Path) -> SourceDeleteChange:
     source = session.scalar(
         select(Source).where(
             Source.source_type == OBSIDIAN_SOURCE_TYPE,
@@ -71,14 +95,19 @@ def delete_obsidian_note_source(session: Session, *, path: Path) -> Source | Non
         )
     )
     if source is None:
-        return None
+        return SourceDeleteChange(source=None, deleted_chunk_ids=[])
 
-    delete_source_chunks(session, source_id=source.id)
+    deleted_chunk_ids = delete_source_chunks(session, source_id=source.id)
     session.execute(delete(Source).where(Source.id == source.id))
-    return source
+    return SourceDeleteChange(source=source, deleted_chunk_ids=deleted_chunk_ids)
 
 
-def move_obsidian_note_source(session: Session, *, old_path: Path, new_path: Path) -> Source | None:
+def move_obsidian_note_source(
+    session: Session,
+    *,
+    old_path: Path,
+    new_path: Path,
+) -> SourceDeleteChange:
     source = session.scalar(
         select(Source).where(
             Source.source_type == OBSIDIAN_SOURCE_TYPE,
@@ -92,14 +121,14 @@ def move_obsidian_note_source(session: Session, *, old_path: Path, new_path: Pat
         )
     )
     if source is None:
-        return target
+        return SourceDeleteChange(source=target, deleted_chunk_ids=[])
 
     if target is not None and target.id != source.id:
-        delete_source_chunks(session, source_id=source.id)
+        deleted_chunk_ids = delete_source_chunks(session, source_id=source.id)
         session.execute(delete(Source).where(Source.id == source.id))
         target.title = new_path.stem
-        return target
+        return SourceDeleteChange(source=target, deleted_chunk_ids=deleted_chunk_ids)
 
     source.path = str(new_path)
     source.title = new_path.stem
-    return source
+    return SourceDeleteChange(source=source, deleted_chunk_ids=[])

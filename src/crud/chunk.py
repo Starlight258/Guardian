@@ -11,15 +11,16 @@ def replace_source_chunks(
     *,
     source_id: str,
     chunks: list[Chunk],
-) -> None:
-    delete_source_chunks(session, source_id=source_id)
+) -> list[str]:
+    deleted_chunk_ids = delete_source_chunks(session, source_id=source_id)
     session.add_all(chunks)
+    return deleted_chunk_ids
 
 
-def delete_source_chunks(session: Session, *, source_id: str) -> None:
+def delete_source_chunks(session: Session, *, source_id: str) -> list[str]:
     chunk_ids = list(session.scalars(select(Chunk.id).where(Chunk.source_id == source_id)))
     if not chunk_ids:
-        return
+        return []
 
     session.execute(
         delete(GraphEdge).where(
@@ -30,3 +31,4 @@ def delete_source_chunks(session: Session, *, source_id: str) -> None:
         )
     )
     session.execute(delete(Chunk).where(Chunk.source_id == source_id))
+    return chunk_ids

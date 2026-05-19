@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from src.api.events import router as events_router
+from src.db import SessionLocal
+from src.service.graph import GraphService
 from src.service.watcher import create_watchers_from_env
 
 load_dotenv()
@@ -13,7 +15,12 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    watchers = create_watchers_from_env()
+    graph_service = GraphService()
+    with SessionLocal() as session:
+        graph_service.reconstruct(session)
+    app.state.graph_service = graph_service
+
+    watchers = create_watchers_from_env(graph_service=graph_service)
     for watcher in watchers:
         watcher.start()
     app.state.obsidian_watchers = watchers
