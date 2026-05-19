@@ -2,13 +2,13 @@
 
 ## What we're building
 
-Obsidian 노트와 commit-session checkpoint를 자동 수집해 의미 기반 지식 그래프로 연결하고,
+Obsidian 노트와 session checkpoint를 자동 수집해 의미 기반 지식 그래프로 연결하고,
 Claude Code prompt event로 현재 작업과 관련된 과거 맥락을 조회해 Angel이 Claude Code status line에 짧은 메시지를 띄우는 개인 기억 보조 레이어.
 
 ### Capture
 - Obsidian: `watchdog` filesystem watcher (create / update / delete / move), 서버 내부 background task
 - Claude Code: `UserPromptSubmit` hook → HTTP POST `/events/prompt` → realtime Recall trigger
-- Git checkpoint: post-commit hook / Entire-style checkpoint → commit-session 장기 memory source
+- Session checkpoint: session-end hook → HTTP POST `/events/session-checkpoint` → session summary 기반 rule-based summary를 장기 memory source로 저장
 - 수동 sync 없음, 항상 자동 수집
 
 ### Connect
@@ -37,7 +37,9 @@ Claude Code prompt event로 현재 작업과 관련된 과거 맥락을 조회�
 - Guardian 서버는 항상 실행 중 가정
 - Obsidian watchdog → endpoint 없이 service 직접 호출
 - Claude Code prompt hook → HTTP POST `/events/prompt` (별도 프로세스 IPC), 장기 chunk 저장 없이 realtime recall trigger로 사용
-- Git checkpoint → commit_sha 기준 장기 memory source로 저장, prompt event와 dedupe
+- Session checkpoint → session_id 기준 장기 memory source로 저장, prompt event와 dedupe
+- Session checkpoint summary는 session 종료나 session clear 시점에 생성
+- Entire checkpoint는 Codex commit에서 안정적인 기준으로 쓰지 않음. session-end hook은 항상 rule-based summary를 생성
 - `chunk.id` SQLite ↔ Chroma 공유 — mapping layer 없음
 - NetworkX 그래프 서버 시작 시 재구성 (인메모리)
 - Graph traversal은 Python에서 인접 노드 추출 후 프롬프트 주입 (모델이 NetworkX 직접 호출 안 함)
@@ -72,7 +74,7 @@ Hard problem touch: no
 `/iterate` command: `/iterate implement POST /events/prompt endpoint for Claude Code UserPromptSubmit hook — length filter (50 tokens), call recall trigger with current prompt context, do not persist prompt as long-term chunks. Include guardian_hook.sh that curls this endpoint.`
 
 ### F3 — Capture: Obsidian watchdog | P0
-Files: `src/service/watcher.py`, `src/service/note_ingest.py`, `src/crud/source.py`, `src/crud/chunk.py` (update/delete)
+Files: `src/service/watcher.py`, `src/service/note_save.py`, `src/crud/source.py`, `src/crud/chunk.py` (update/delete)
 Success gate: 파일 create/update/delete/move 이벤트 → SQLite 반영, 300ms debounce 동작
 Hard problem touch: no
 `/iterate` command: `/iterate implement Obsidian watchdog as FastAPI lifespan background task using watchdog library — handle create/update/delete/move events with 300ms debounce, call ingest service directly (no HTTP)`
@@ -83,11 +85,11 @@ Success gate: chunk 저장 시 Chroma 벡터 저장 확인, Chroma top-k 후보 
 Hard problem touch: no
 `/iterate` command: `/iterate implement BGE-M3 embedding via sentence-transformers, store vectors in Chroma collection 'guardian_chunks', build NetworkX graph edges by comparing each new chunk only against Chroma top-k candidates and storing edges with cosine similarity ≥ 0.75 in graph_edges table, reconstruct graph on server startup`
 
-### F5 — Capture: Git checkpoint memory | P1
-Files: `src/service/checkpoint.py`, `src/crud/source.py`, `src/crud/chunk.py`, `hooks/post_commit_guardian.sh`
-Success gate: commit_sha + commit_message + changed_files + session summary 저장, chunking/embedding/graph 연결, 같은 commit_sha 중복 저장 방지
+### F5 — Capture: Session checkpoint memory | P1
+Files: `src/service/checkpoint.py`, `src/crud/source.py`, `src/crud/chunk.py`, `hooks/session_checkpoint_guardian.sh`
+Success gate: session_id + session summary 저장, 질문성 줄(`?`, `왜`, `고민`, `생각`) 분리, chunking/embedding/graph 연결, 같은 session_id 중복 저장 방지
 Hard problem touch: no
-`/iterate` command: `/iterate implement Git checkpoint memory capture via post-commit hook or Entire-style checkpoint adapter — store commit_sha, commit_message, branch, changed_files, session summary as long-term source chunks, dedupe by commit_sha`
+`/iterate` command: `/iterate implement session checkpoint memory capture via session-end hook — store session_id and rule-based session summary as long-term source chunks, group question-like summary lines containing ?, 왜, 고민, or 생각, dedupe by session_id`
 
 ### F6 — Dashboard (Graph UI) | P2
 Files: `frontend/src/`, `src/api/graph.py`
@@ -123,7 +125,7 @@ Hard problem touch: no
 - watchdog delete event → sources soft delete + chunks + graph_edges 삭제
 - watchdog move event → sources.path 업데이트
 - `POST /events/prompt` 짧은 프롬프트 → length filter discard + 장기 chunk 저장 없음
-- Git checkpoint capture → commit_sha 기준 source+chunks 저장, 중복 commit_sha 재수집 방지
+- Session checkpoint capture → session-end 시점 rule-based summary로 session_id 기준 source+chunks 저장, 중복 session_id 재수집 방지
 - `POST /recall` → recall_logs 1건 저장, angel_triggered 값 일치
 - `POST /recall` → recall_logs에 retrieved_chunk_ids/evidence_source_ids/drop_reason/angel_message 저장
 
