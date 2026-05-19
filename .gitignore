@@ -219,6 +219,7 @@ instance/
 
 # Local Guardian config
 .env
+.entire/
 
 # Scrapy stuff:
 .scrapy
