@@ -12,6 +12,9 @@ from src.models import Chunk, Source
 from src.utils import count_tokens, hash_text
 
 OBSIDIAN_SOURCE_TYPE = "obsidian_note"
+GIT_CHECKPOINT_SOURCE_TYPE = "git_checkpoint"
+CHECKPOINT_CHUNK_TOKENS = 512
+CHECKPOINT_CHUNK_OVERLAP_RATIO = 0.2
 
 
 @dataclass(frozen=True)
@@ -66,25 +69,144 @@ def upsert_obsidian_note_source(
         source.title = path.stem
         source.content_hash = content_hash
 
-    chunk = Chunk(
-        id=str(uuid4()),
+    chunks = _build_chunks(source_id=source.id, texts=[content])
+    deleted_chunk_ids = replace_source_chunks(
+        session,
         source_id=source.id,
-        chunk_index=0,
-        text=content,
-        token_count=count_tokens(content),
+        chunks=chunks,
+    )
+    return SourceChunkChange(
+        source=source,
+        chunks=chunks,
+        deleted_chunk_ids=deleted_chunk_ids,
+        changed=True,
+    )
+
+
+def upsert_git_checkpoint_source(
+    session: Session,
+    *,
+    commit_sha: str,
+    commit_message: str,
+    branch: str | None,
+    changed_files: list[str],
+    session_summary: str,
+) -> SourceChunkChange:
+    source = session.scalar(
+        select(Source).where(
+            Source.source_type == GIT_CHECKPOINT_SOURCE_TYPE,
+            Source.commit_sha == commit_sha,
+        )
+    )
+    if source is not None:
+        return SourceChunkChange(
+            source=source,
+            chunks=[],
+            deleted_chunk_ids=[],
+            changed=False,
+        )
+
+    content = render_git_checkpoint_content(
+        commit_sha=commit_sha,
+        commit_message=commit_message,
+        branch=branch,
+        changed_files=changed_files,
+        session_summary=session_summary,
+    )
+    content_hash = hash_text(content)
+    source = Source(
+        id=str(uuid4()),
+        source_type=GIT_CHECKPOINT_SOURCE_TYPE,
+        title=f"Git checkpoint {commit_sha[:12]}",
+        path=None,
+        commit_sha=commit_sha,
+        metadata_json={
+            "branch": branch,
+            "changed_files": changed_files,
+            "commit_message": commit_message,
+            "session_summary": session_summary,
+        },
         content_hash=content_hash,
+    )
+    session.add(source)
+    session.flush()
+
+    chunks = _build_chunks(
+        source_id=source.id,
+        texts=split_checkpoint_content(content),
     )
     deleted_chunk_ids = replace_source_chunks(
         session,
         source_id=source.id,
-        chunks=[chunk],
+        chunks=chunks,
     )
     return SourceChunkChange(
         source=source,
-        chunks=[chunk],
+        chunks=chunks,
         deleted_chunk_ids=deleted_chunk_ids,
         changed=True,
     )
+
+
+def render_git_checkpoint_content(
+    *,
+    commit_sha: str,
+    commit_message: str,
+    branch: str | None,
+    changed_files: list[str],
+    session_summary: str,
+) -> str:
+    files = "\n".join(f"- {path}" for path in changed_files) or "- none"
+    branch_text = branch or "unknown"
+    return "\n".join(
+        [
+            "# Git checkpoint",
+            "",
+            f"Commit: {commit_sha}",
+            f"Branch: {branch_text}",
+            "",
+            "## Commit message",
+            commit_message.strip(),
+            "",
+            "## Changed files",
+            files,
+            "",
+            "## Session summary",
+            session_summary.strip(),
+        ]
+    )
+
+
+def split_checkpoint_content(content: str) -> list[str]:
+    words = content.split()
+    if len(words) <= CHECKPOINT_CHUNK_TOKENS:
+        return [content]
+
+    chunks: list[str] = []
+    overlap = int(CHECKPOINT_CHUNK_TOKENS * CHECKPOINT_CHUNK_OVERLAP_RATIO)
+    step = CHECKPOINT_CHUNK_TOKENS - overlap
+    for start in range(0, len(words), step):
+        window = words[start : start + CHECKPOINT_CHUNK_TOKENS]
+        if not window:
+            break
+        chunks.append(" ".join(window))
+        if start + CHECKPOINT_CHUNK_TOKENS >= len(words):
+            break
+    return chunks
+
+
+def _build_chunks(*, source_id: str, texts: list[str]) -> list[Chunk]:
+    return [
+        Chunk(
+            id=str(uuid4()),
+            source_id=source_id,
+            chunk_index=index,
+            text=text,
+            token_count=count_tokens(text),
+            content_hash=hash_text(text),
+        )
+        for index, text in enumerate(texts)
+    ]
 
 
 def delete_obsidian_note_source(session: Session, *, path: Path) -> SourceDeleteChange:

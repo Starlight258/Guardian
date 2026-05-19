@@ -1,11 +1,20 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
 
-from src.schemas.events import PromptEventRequest, PromptEventResponse
+from src.deps import get_db
+from src.schemas.events import (
+    CheckpointEventRequest,
+    CheckpointEventResponse,
+    PromptEventRequest,
+    PromptEventResponse,
+)
+from src.service.checkpoint import GitCheckpoint, capture_git_checkpoint
 from src.service.recall_trigger import MIN_PROMPT_TOKENS, trigger_recall_from_prompt
 
 router = APIRouter(prefix="/events", tags=["events"])
+DBSession = Depends(get_db)
 
 
 def _extract_prompt(event: PromptEventRequest) -> str:
@@ -32,4 +41,30 @@ def receive_prompt_event(event: PromptEventRequest) -> PromptEventResponse:
         min_tokens=MIN_PROMPT_TOKENS,
         recall_triggered=result.recall_triggered,
         reason=result.reason,
+    )
+
+
+@router.post("/checkpoint", response_model=CheckpointEventResponse)
+def receive_checkpoint_event(
+    event: CheckpointEventRequest,
+    request: Request,
+    db: Session = DBSession,
+) -> CheckpointEventResponse:
+    graph_service = getattr(request.app.state, "graph_service", None)
+    change = capture_git_checkpoint(
+        db,
+        checkpoint=GitCheckpoint(
+            commit_sha=event.commit_sha,
+            commit_message=event.commit_message,
+            branch=event.branch,
+            changed_files=event.changed_files,
+            session_summary=event.session_summary,
+        ),
+        graph_service=graph_service,
+    )
+    return CheckpointEventResponse(
+        status="deduped" if not change.changed else "accepted",
+        source_id=change.source.id,
+        chunk_count=len(change.chunks),
+        deduped=not change.changed,
     )

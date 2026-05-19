@@ -24,3 +24,18 @@ class PromptEventResponse(BaseModel):
     min_tokens: int
     recall_triggered: bool
     reason: str | None = None
+
+
+class CheckpointEventRequest(BaseModel):
+    commit_sha: str
+    commit_message: str
+    changed_files: list[str] = Field(default_factory=list)
+    session_summary: str
+    branch: str | None = None
+
+
+class CheckpointEventResponse(BaseModel):
+    status: str
+    source_id: str
+    chunk_count: int
+    deduped: bool
