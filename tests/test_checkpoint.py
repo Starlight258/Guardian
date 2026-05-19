@@ -197,7 +197,7 @@ def test_checkpoint_event_updates_app_graph_service() -> None:
     try:
         client = TestClient(app)
         response = client.post(
-            "/events/checkpoint",
+            "/events/session-checkpoint",
             json={
                 "session_id": "session-6",
                 "session_summary": "Captured through the running app.",

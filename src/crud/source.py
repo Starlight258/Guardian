@@ -12,7 +12,7 @@ from src.models import Chunk, Source
 from src.utils import count_tokens, hash_text
 
 OBSIDIAN_SOURCE_TYPE = "obsidian_note"
-GIT_CHECKPOINT_SOURCE_TYPE = "git_checkpoint"
+SESSION_CHECKPOINT_SOURCE_TYPE = "session_checkpoint"
 CHECKPOINT_CHUNK_TOKENS = 512
 CHECKPOINT_CHUNK_OVERLAP_RATIO = 0.2
 
@@ -83,19 +83,17 @@ def upsert_obsidian_note_source(
     )
 
 
-def upsert_git_checkpoint_source(
+def upsert_session_checkpoint_source(
     session: Session,
     *,
-    commit_sha: str,
-    commit_message: str,
-    branch: str | None,
-    changed_files: list[str],
+    session_id: str,
     session_summary: str,
+    metadata_json: dict | None = None,
 ) -> SourceChunkChange:
     source = session.scalar(
         select(Source).where(
-            Source.source_type == GIT_CHECKPOINT_SOURCE_TYPE,
-            Source.commit_sha == commit_sha,
+            Source.source_type == SESSION_CHECKPOINT_SOURCE_TYPE,
+            Source.session_id == session_id,
         )
     )
     if source is not None:
@@ -106,26 +104,22 @@ def upsert_git_checkpoint_source(
             changed=False,
         )
 
-    content = render_git_checkpoint_content(
-        commit_sha=commit_sha,
-        commit_message=commit_message,
-        branch=branch,
-        changed_files=changed_files,
+    content = render_session_checkpoint_content(
+        session_id=session_id,
         session_summary=session_summary,
     )
     content_hash = hash_text(content)
+    stored_metadata = dict(metadata_json or {})
+    stored_metadata["session_id"] = session_id
+    stored_metadata["session_summary"] = session_summary
     source = Source(
         id=str(uuid4()),
-        source_type=GIT_CHECKPOINT_SOURCE_TYPE,
-        title=f"Git checkpoint {commit_sha[:12]}",
+        source_type=SESSION_CHECKPOINT_SOURCE_TYPE,
+        title=f"Session checkpoint {session_id[:12]}",
         path=None,
-        commit_sha=commit_sha,
-        metadata_json={
-            "branch": branch,
-            "changed_files": changed_files,
-            "commit_message": commit_message,
-            "session_summary": session_summary,
-        },
+        session_id=session_id,
+        commit_sha=None,
+        metadata_json=stored_metadata,
         content_hash=content_hash,
     )
     session.add(source)
@@ -133,43 +127,23 @@ def upsert_git_checkpoint_source(
 
     chunks = _build_chunks(
         source_id=source.id,
-        texts=split_checkpoint_content(content),
+        texts=split_session_checkpoint_content(content),
     )
-    deleted_chunk_ids = replace_source_chunks(
-        session,
-        source_id=source.id,
-        chunks=chunks,
-    )
+    session.add_all(chunks)
     return SourceChunkChange(
         source=source,
         chunks=chunks,
-        deleted_chunk_ids=deleted_chunk_ids,
+        deleted_chunk_ids=[],
         changed=True,
     )
 
 
-def render_git_checkpoint_content(
-    *,
-    commit_sha: str,
-    commit_message: str,
-    branch: str | None,
-    changed_files: list[str],
-    session_summary: str,
-) -> str:
-    files = "\n".join(f"- {path}" for path in changed_files) or "- none"
-    branch_text = branch or "unknown"
+def render_session_checkpoint_content(*, session_id: str, session_summary: str) -> str:
     return "\n".join(
         [
-            "# Git checkpoint",
+            "# Session checkpoint",
             "",
-            f"Commit: {commit_sha}",
-            f"Branch: {branch_text}",
-            "",
-            "## Commit message",
-            commit_message.strip(),
-            "",
-            "## Changed files",
-            files,
+            f"Session: {session_id}",
             "",
             "## Session summary",
             session_summary.strip(),
@@ -177,7 +151,7 @@ def render_git_checkpoint_content(
     )
 
 
-def split_checkpoint_content(content: str) -> list[str]:
+def split_session_checkpoint_content(content: str) -> list[str]:
     words = content.split()
     if len(words) <= CHECKPOINT_CHUNK_TOKENS:
         return [content]

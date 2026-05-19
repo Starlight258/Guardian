@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session
 
 from src.deps import get_db
 from src.schemas.events import (
-    CheckpointEventRequest,
-    CheckpointEventResponse,
     PromptEventRequest,
     PromptEventResponse,
+    SessionCheckpointRequest,
+    SessionCheckpointResponse,
 )
-from src.service.checkpoint import GitCheckpoint, capture_git_checkpoint
+from src.service.checkpoint import SessionCheckpoint, capture_session_checkpoint
 from src.service.recall_trigger import MIN_PROMPT_TOKENS, trigger_recall_from_prompt
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -44,25 +44,23 @@ def receive_prompt_event(event: PromptEventRequest) -> PromptEventResponse:
     )
 
 
-@router.post("/checkpoint", response_model=CheckpointEventResponse)
+@router.post("/session-checkpoint", response_model=SessionCheckpointResponse)
 def receive_checkpoint_event(
-    event: CheckpointEventRequest,
+    event: SessionCheckpointRequest,
     request: Request,
     db: Session = DBSession,
-) -> CheckpointEventResponse:
+) -> SessionCheckpointResponse:
     graph_service = getattr(request.app.state, "graph_service", None)
-    change = capture_git_checkpoint(
+    change = capture_session_checkpoint(
         db,
-        checkpoint=GitCheckpoint(
-            commit_sha=event.commit_sha,
-            commit_message=event.commit_message,
-            branch=event.branch,
-            changed_files=event.changed_files,
+        checkpoint=SessionCheckpoint(
+            session_id=event.session_id,
             session_summary=event.session_summary,
+            metadata=event.metadata,
         ),
         graph_service=graph_service,
     )
-    return CheckpointEventResponse(
+    return SessionCheckpointResponse(
         status="deduped" if not change.changed else "accepted",
         source_id=change.source.id,
         chunk_count=len(change.chunks),
