@@ -26,15 +26,13 @@ class PromptEventResponse(BaseModel):
     reason: str | None = None
 
 
-class CheckpointEventRequest(BaseModel):
-    commit_sha: str
-    commit_message: str
-    changed_files: list[str] = Field(default_factory=list)
+class SessionCheckpointRequest(BaseModel):
+    session_id: str
     session_summary: str
-    branch: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-class CheckpointEventResponse(BaseModel):
+class SessionCheckpointResponse(BaseModel):
     status: str
     source_id: str
     chunk_count: int
