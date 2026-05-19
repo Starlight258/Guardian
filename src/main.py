@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from src.api.events import router as events_router
+from src.api.graph import router as graph_router
 from src.db import SessionLocal
 from src.service.graph import GraphService
 from src.service.watcher import create_watchers_from_env
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Guardian", version="0.1.0", lifespan=lifespan)
 app.include_router(events_router)
+app.include_router(graph_router)
 
 
 @app.get("/health")
