@@ -32,6 +32,30 @@ MVP는 개인 AI 학습 흐름의 기억 보조 레이어에 집중해요.
 
 ---
 
+## Local Run
+
+### 1. Backend
+
+```bash
+uv run uvicorn src.main:app --host 127.0.0.1 --port 8000
+```
+
+API docs:
+- http://127.0.0.1:8000/docs
+
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Dashboard:
+- http://127.0.0.1:5173
+
+---
+
 ## Architecture
 
 ```mermaid
