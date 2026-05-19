@@ -18,7 +18,7 @@ AI와 함께 만든 생각의 흔적을 자동으로 모으고, 연결하고, �
 
 AI와 작업하다 보면 비슷한 질문을 반복하게 돼요. 예전에 정리했던 노트나 커밋 맥락이 있어도, 코딩 중에는 다시 찾지 않게 돼요.
 
-Guardian은 Obsidian 노트와 commit-session checkpoint를 자동으로 수집하고, 의미 기반으로 연결해서 하나의 그래프로 정리해줘요. Claude Code prompt event가 들어오면 현재 작업과 비슷한 과거 맥락을 찾아 Angel이 짧은 메시지를 띄워요.
+Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 의미 기반으로 연결해서 하나의 그래프로 정리해줘요. Claude Code prompt event가 들어오면 현재 작업과 비슷한 과거 맥락을 찾아 Angel이 짧은 메시지를 띄워요.
 
 MVP는 개인 AI 학습 흐름의 기억 보조 레이어에 집중해요.
 
@@ -37,7 +37,7 @@ MVP는 개인 AI 학습 흐름의 기억 보조 레이어에 집중해요.
 ```mermaid
 flowchart LR
   A[Obsidian Notes] --> C[Capture Layer]
-  B[Git Checkpoints] --> C
+  B[Session Checkpoints] --> C
   C --> D[Semantic Processing]
   D --> E[Knowledge Graph\nGraphRAG]
   P[Claude Code Prompt Event] --> F[Recall Agent\nretrieval + response]
@@ -86,7 +86,7 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 | Source | Capture Method |
 |---|---|
 | Obsidian notes | `watchdog` filesystem watcher |
-| Git checkpoints | post-commit hook / Entire-style checkpoint |
+| Session checkpoints | session-end hook → rule-based summary |
 | Claude Code prompt events | `UserPromptSubmit` hook → realtime recall trigger |
 
 ---

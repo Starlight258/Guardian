@@ -27,6 +27,7 @@ class Source(Base):
     source_type: Mapped[str] = mapped_column(String(32), index=True)
     title: Mapped[str | None] = mapped_column(String(255))
     path: Mapped[str | None] = mapped_column(String(1024), index=True)
+    session_id: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     commit_sha: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
     content_hash: Mapped[str] = mapped_column(String(64))
