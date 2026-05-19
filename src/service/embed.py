@@ -19,6 +19,21 @@ class Embedder(Protocol):
         pass
 
 
+class SentenceTransformerEmbedder(Embedder):
+    def __init__(self, model_name: str | None = None) -> None:
+        self._model_name = model_name or os.getenv(EMBEDDING_MODEL_ENV, DEFAULT_EMBEDDING_MODEL)
+        self._model = None
+
+    def embed(self, text: str) -> list[float]:
+        if self._model is None:
+            from sentence_transformers import SentenceTransformer
+
+            self._model = SentenceTransformer(self._model_name)
+
+        embedding = self._model.encode([text], normalize_embeddings=True)[0]
+        return embedding.tolist()
+
+
 @dataclass(frozen=True)
 class VectorSearchResult:
     chunk_id: str
@@ -36,22 +51,7 @@ class ChunkVectorStore(Protocol):
         pass
 
 
-class SentenceTransformerEmbedder:
-    def __init__(self, model_name: str | None = None) -> None:
-        self._model_name = model_name or os.getenv(EMBEDDING_MODEL_ENV, DEFAULT_EMBEDDING_MODEL)
-        self._model = None
-
-    def embed(self, text: str) -> list[float]:
-        if self._model is None:
-            from sentence_transformers import SentenceTransformer
-
-            self._model = SentenceTransformer(self._model_name)
-
-        embedding = self._model.encode([text], normalize_embeddings=True)[0]
-        return embedding.tolist()
-
-
-class ChromaChunkVectorStore:
+class ChromaChunkVectorStore(ChunkVectorStore):
     def __init__(
         self,
         *,
