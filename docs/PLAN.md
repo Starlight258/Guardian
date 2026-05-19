@@ -49,8 +49,11 @@ Claude Code prompt event로 현재 작업과 관련된 과거 맥락을 조회�
 - `angel_message` 저장은 기본 활성화하되 config로 비활성화 가능
 - `/recall` MCP tool + 대시보드 수동 검색 양쪽에서 호출
 - 인증 없음 (단일 사용자, 로컬 전용)
-- LLM 호출은 `LLMClient` Protocol로 추상화 — `AnthropicLLMClient` / `LocalLLMClient` 구현, `GUARDIAN_LLM_PROVIDER` 환경변수로 전환
-- Circuit Breaker: Anthropic API 5xx/timeout → 로컬 LLM(Ollama) 자동 전환, 복구 감지 후 Anthropic 복귀. Model Router 없음 — LLM call point가 단일 Recall Agent 하나이므로 Circuit Breaker로 충분
+- LLM 호출은 `LLMClient` Protocol로 추상화 — `AnthropicLLMClient` / `LocalLLMClient(Ollama)` 구현, `GUARDIAN_LLM_PROVIDER` 환경변수로 전환
+- 로컬 LLM 권장 모델: `qwen2.5:7b` (`GUARDIAN_LOCAL_MODEL` 환경변수) — function calling 신뢰도 · 한국어 두 축 모두 커버
+- Circuit Breaker 상태: CLOSED → OPEN(연속 3회 실패) → HALF_OPEN(60초 후) → CLOSED(probe 성공). Model Router 없음 — Recall Agent LLM call point가 하나라 Circuit Breaker로 충분
+- `angel_output` tool_use 강제 이유: free-text JSON 파싱 불안정 제거, `response.content[0].input` dict 직접 수신
+- LocalLLMClient tool_use 파싱 실패(JSONDecodeError / KeyError / ValidationError) → Angel silent skip (C fallback)
 
 ## Constraints
 
@@ -107,9 +110,13 @@ Hard problem touch: **yes**
 
 ### F9 — LLM Resilience Layer | P2
 Files: `src/llm.py`
-Success gate: `AnthropicLLMClient` 정상 동작 확인, Anthropic 5xx mock → `LocalLLMClient` 자동 전환, 복구 후 Anthropic 복귀 확인
+Success gate:
+- `AnthropicLLMClient` 정상 동작 확인
+- Anthropic 5xx mock 3회 연속 → `LocalLLMClient` 자동 전환 (OPEN)
+- 60초 후 probe 성공 → Anthropic 복귀 (CLOSED)
+- LocalLLMClient tool_use 파싱 실패 → `None` 반환, Angel silent skip
 Hard problem touch: no
-`/iterate` command: `/iterate implement LLMClient Protocol with AnthropicLLMClient and LocalLLMClient (Ollama OpenAI-compatible endpoint), add Circuit Breaker wrapper that detects Anthropic API failures and falls back to local LLM, then recovers when Anthropic is healthy`
+`/iterate` command: `/iterate implement LLMClient Protocol with AnthropicLLMClient and LocalLLMClient (Ollama OpenAI-compatible endpoint, qwen2.5:7b). Circuit Breaker: CLOSED→OPEN on 3 consecutive failures (APIStatusError ≥500 / APIConnectionError / timeout>10s), OPEN→HALF_OPEN after 60s, HALF_OPEN→CLOSED on probe success. LocalLLMClient wraps tool_use parse in try/except returning None on JSONDecodeError/KeyError/ValidationError. GUARDIAN_LLM_PROVIDER and GUARDIAN_LOCAL_MODEL env vars.`
 
 ### F8 — MCP Server | P1
 Files: `src/mcp_server.py`

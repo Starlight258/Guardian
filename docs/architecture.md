@@ -174,11 +174,42 @@ LLM 호출은 `LLMClient` Protocol로 추상화해요.
 ```
 LLMClient (Protocol)
 ├── AnthropicLLMClient  → Claude API
-└── LocalLLMClient      → Ollama (OpenAI 호환 엔드포인트)
+└── LocalLLMClient      → Ollama (OpenAI 호환 엔드포인트, qwen2.5:7b 권장)
 ```
 
 `GUARDIAN_LLM_PROVIDER` 환경변수로 백엔드를 전환해요.
-Anthropic API 장애 시 Circuit Breaker가 자동으로 로컬 LLM으로 전환하고, 복구 감지 후 다시 Anthropic으로 돌아와요.
+
+## Circuit Breaker
+
+Anthropic API 장애 시 자동으로 로컬 LLM으로 전환하고, 복구 감지 후 다시 Anthropic으로 돌아와요.
+
+```
+CLOSED ──(연속 3회 실패)──→ OPEN
+  ↑                           │
+  │                         60초 대기
+  │                           ↓
+  └──(probe 성공)────── HALF_OPEN
+```
+
+| 파라미터 | 값 | 이유 |
+|---|---|---|
+| 실패 threshold | 연속 3회 | 일시적 오류 허용 |
+| OPEN → HALF_OPEN | 60초 | 장애 복구 평균 대기 |
+| probe 방식 | 다음 실제 요청 1회 | 더미 요청 불필요 |
+
+실패 조건: `APIStatusError(status ≥ 500)`, `APIConnectionError`, timeout > 10s
+
+## tool_use 강제 이유
+
+`angel_output` tool을 `tool_choice={"type":"tool","name":"angel_output"}`로 강제해요.
+free-text JSON 응답의 파싱 불안정성을 없애고, `response.content[0].input`으로 바로 dict를 받기 위해서예요.
+
+LocalLLMClient는 Ollama OpenAI 호환 엔드포인트를 통해 동일한 tool_choice를 전달하지만, 모델 품질에 따라 schema 불일치가 발생할 수 있어요.
+
+```
+LocalLLMClient tool_use 파싱 성공 → Angel
+                         실패       → silent skip (JSONDecodeError / KeyError / ValidationError)
+```
 
 LLM 호출 전에 retrieval context를 먼저 구성해요.
 
