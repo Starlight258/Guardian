@@ -82,7 +82,7 @@ flowchart LR
 | Graph | NetworkX |
 | GraphRAG | Chroma + NetworkX (semantic + structural traversal) |
 | Agent Layer | Retrieval before LLM + single LLM response call |
-| LLM Resilience | Circuit Breaker (Anthropic API 장애 시 Ollama 자동 전환) |
+| LLM Resilience | Circuit Breaker (Anthropic API 장애 시 Ollama qwen2.5:7b 자동 전환) |
 | Guardrails | Confidence scoring (threshold-based Angel trigger) |
 | Frontend | React + Vite + d3.js |
 | Claude integration | MCP Server + Hooks |
