@@ -84,13 +84,14 @@ Prompt event는 `/events/prompt`로 전달되고, length filter를 통과하면 
 
 ## Git Checkpoint
 
-Commit 이후 생성되는 checkpoint는 장기 memory source로 저장해요.
+Commit 이후 checkpoint는 장기 memory source로 저장해요.
+post-commit hook은 `Entire-Checkpoint:` trailer가 있으면 `entire checkpoint explain --commit HEAD --short --no-pager` 결과를 우선 Guardian에 전달하고, Entire summary가 없으면 commit message와 changed files로 만든 rule-based summary를 저장해요. commit message 줄에 `?`, `왜`, `고민`, `생각`이 포함되면 그 줄을 질문 목록으로 정리해요.
 
 - commit SHA
 - commit message
 - branch
 - changed files
-- session summary
+- Entire session summary 또는 rule-based fallback summary
 
 `commit_sha` 기준으로 중복 수집을 막고, Obsidian 노트와 같은 chunking · embedding · graph 경로를 통과시켜요.
 

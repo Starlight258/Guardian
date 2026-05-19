@@ -251,7 +251,9 @@ def test_checkpoint_from_git_collects_commit_metadata(tmp_path: Path) -> None:
     assert checkpoint.session_summary == "docs: add note"
 
 
-def test_post_commit_hook_posts_checkpoint_from_external_repo(tmp_path: Path) -> None:
+def test_post_commit_hook_falls_back_to_rule_based_summary_without_entire_checkpoint_trailer(
+    tmp_path: Path,
+) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
@@ -272,7 +274,6 @@ def test_post_commit_hook_posts_checkpoint_from_external_repo(tmp_path: Path) ->
             env={
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
                 "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
-                "GUARDIAN_CHECKPOINT_SUMMARY": "External repo summary",
             },
             check=True,
         )
@@ -283,7 +284,158 @@ def test_post_commit_hook_posts_checkpoint_from_external_repo(tmp_path: Path) ->
     payload = server.payload
     assert payload["commit_message"] == "docs: add note"
     assert payload["changed_files"] == ["note.md"]
-    assert payload["session_summary"] == "External repo summary"
+    assert payload["session_summary"] == (
+        "Rule-based checkpoint summary.\n"
+        "Commit message: docs: add note\n"
+        "Changed files (1): note.md"
+    )
+
+
+def test_post_commit_hook_groups_question_marks_in_rule_based_summary(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "guardian@example.com")
+    _git(repo, "config", "user.name", "Guardian")
+    note = repo / "note.md"
+    note.write_text("memory", encoding="utf-8")
+    _git(repo, "add", "note.md")
+    _git(
+        repo,
+        "commit",
+        "-m",
+        "docs: record decisions",
+        "-m",
+        "Should Guardian keep fallback summaries? What should Entire own?",
+    )
+    server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+
+    try:
+        subprocess.run(
+            [str(Path("hooks/post_commit_guardian.sh").resolve())],
+            cwd=repo,
+            env={
+                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+                "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
+            },
+            check=True,
+        )
+    finally:
+        thread.join(timeout=5)
+        server.server_close()
+
+    payload = server.payload
+    assert payload["session_summary"] == (
+        "Rule-based checkpoint summary.\n"
+        "Commit message: docs: record decisions\n\n"
+        "Should Guardian keep fallback summaries? What should Entire own?\n"
+        "Questions:\n"
+        "- Should Guardian keep fallback summaries? What should Entire own?\n"
+        "Changed files (1): note.md"
+    )
+
+
+def test_post_commit_hook_groups_question_keywords_in_rule_based_summary(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "guardian@example.com")
+    _git(repo, "config", "user.name", "Guardian")
+    note = repo / "note.md"
+    note.write_text("memory", encoding="utf-8")
+    _git(repo, "add", "note.md")
+    _git(
+        repo,
+        "commit",
+        "-m",
+        "docs: record fallback policy",
+        "-m",
+        "왜 Entire 없을 때도 저장해야 하는지 고민. 다음에는 summary 품질을 생각.",
+    )
+    server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+
+    try:
+        subprocess.run(
+            [str(Path("hooks/post_commit_guardian.sh").resolve())],
+            cwd=repo,
+            env={
+                "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+                "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
+            },
+            check=True,
+        )
+    finally:
+        thread.join(timeout=5)
+        server.server_close()
+
+    payload = server.payload
+    assert payload["session_summary"] == (
+        "Rule-based checkpoint summary.\n"
+        "Commit message: docs: record fallback policy\n\n"
+        "왜 Entire 없을 때도 저장해야 하는지 고민. 다음에는 summary 품질을 생각.\n"
+        "Questions:\n"
+        "- 왜 Entire 없을 때도 저장해야 하는지 고민. 다음에는 summary 품질을 생각.\n"
+        "Changed files (1): note.md"
+    )
+
+
+def test_post_commit_hook_posts_entire_checkpoint_summary_from_external_repo(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "guardian@example.com")
+    _git(repo, "config", "user.name", "Guardian")
+    note = repo / "note.md"
+    note.write_text("memory", encoding="utf-8")
+    _git(repo, "add", "note.md")
+    _git(repo, "commit", "-m", "docs: add note", "-m", "Entire-Checkpoint: captured")
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    entire = bin_dir / "entire"
+    entire.write_text(
+        "#!/usr/bin/env sh\n"
+        "if [ \"$1\" = \"checkpoint\" ] && [ \"$2\" = \"explain\" ]; then\n"
+        "  printf '%s\\n' 'Entire checkpoint summary'\n"
+        "  exit 0\n"
+        "fi\n"
+        "exit 1\n",
+        encoding="utf-8",
+    )
+    entire.chmod(0o755)
+
+    server = _CaptureServer(("127.0.0.1", 0), _CaptureHandler)
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+
+    try:
+        subprocess.run(
+            [str(Path("hooks/post_commit_guardian.sh").resolve())],
+            cwd=repo,
+            env={
+                "PATH": f"{bin_dir}:/usr/bin:/bin:/usr/sbin:/sbin",
+                "GUARDIAN_URL": f"http://127.0.0.1:{server.server_port}",
+            },
+            check=True,
+        )
+    finally:
+        thread.join(timeout=5)
+        server.server_close()
+
+    payload = server.payload
+    assert payload["commit_message"].startswith("docs: add note")
+    assert payload["changed_files"] == ["note.md"]
+    assert payload["session_summary"] == "Entire checkpoint summary"
 
 
 def _git(repo: Path, *args: str) -> str:
