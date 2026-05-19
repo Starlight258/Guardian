@@ -13,7 +13,7 @@ from watchdog.events import FileCreatedEvent
 
 from src.db import Base
 from src.models import Chunk, GraphEdge, Source
-from src.service.note_ingest import delete_obsidian_note, ingest_obsidian_note, move_obsidian_note
+from src.service.note_save import delete_obsidian_note, move_obsidian_note, save_obsidian_note
 from src.service.watcher import ObsidianEventHandler
 from src.utils import OBSIDIAN_PATHS_ENV, obsidian_paths_from_env
 
@@ -28,13 +28,13 @@ def make_session_factory() -> Callable[[], Session]:
     return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 
-def test_ingest_obsidian_note_creates_source_and_chunk(tmp_path: Path) -> None:
+def test_save_obsidian_note_creates_source_and_chunk(tmp_path: Path) -> None:
     session_factory = make_session_factory()
     note_path = tmp_path / "note.md"
     note_path.write_text("alpha beta gamma", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
 
     with session_factory() as session:
         source = session.scalar(select(Source).where(Source.path == str(note_path)))
@@ -47,17 +47,17 @@ def test_ingest_obsidian_note_creates_source_and_chunk(tmp_path: Path) -> None:
     assert chunks[0].text == "alpha beta gamma"
 
 
-def test_ingest_obsidian_note_updates_existing_source_and_replaces_chunk(tmp_path: Path) -> None:
+def test_save_obsidian_note_updates_existing_source_and_replaces_chunk(tmp_path: Path) -> None:
     session_factory = make_session_factory()
     note_path = tmp_path / "note.md"
     note_path.write_text("first version", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
 
     note_path.write_text("second version with more text", encoding="utf-8")
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
 
     with session_factory() as session:
         sources = list(session.scalars(select(Source)))
@@ -68,13 +68,13 @@ def test_ingest_obsidian_note_updates_existing_source_and_replaces_chunk(tmp_pat
     assert chunks[0].text == "second version with more text"
 
 
-def test_ingest_obsidian_note_skips_unchanged_content(tmp_path: Path) -> None:
+def test_save_obsidian_note_skips_unchanged_content(tmp_path: Path) -> None:
     session_factory = make_session_factory()
     note_path = tmp_path / "note.md"
     note_path.write_text("same content", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
 
     with session_factory() as session:
         original_chunk = session.scalar(select(Chunk))
@@ -82,7 +82,7 @@ def test_ingest_obsidian_note_skips_unchanged_content(tmp_path: Path) -> None:
         original_chunk_id = original_chunk.id
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
 
     with session_factory() as session:
         chunks = list(session.scalars(select(Chunk)))
@@ -97,7 +97,7 @@ def test_delete_obsidian_note_removes_source_and_chunks(tmp_path: Path) -> None:
     note_path.write_text("alpha beta gamma", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
     with session_factory() as session:
         delete_obsidian_note(session, path=note_path)
 
@@ -115,7 +115,7 @@ def test_delete_obsidian_note_removes_graph_edges_for_chunks(tmp_path: Path) -> 
     note_path.write_text("alpha beta gamma", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path)
+        save_obsidian_note(session, path=note_path)
         chunk = session.scalar(select(Chunk))
         assert chunk is not None
         other_source = Source(
@@ -164,7 +164,7 @@ def test_move_obsidian_note_updates_source_path(tmp_path: Path) -> None:
     old_path.write_text("alpha beta gamma", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=old_path)
+        save_obsidian_note(session, path=old_path)
     old_path.rename(new_path)
     with session_factory() as session:
         move_obsidian_note(session, old_path=old_path, new_path=new_path)
@@ -186,8 +186,8 @@ def test_move_obsidian_note_merges_when_target_source_exists(tmp_path: Path) -> 
     new_path.write_text("new content", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=old_path)
-        ingest_obsidian_note(session, path=new_path)
+        save_obsidian_note(session, path=old_path)
+        save_obsidian_note(session, path=new_path)
 
     old_path.unlink()
     with session_factory() as session:

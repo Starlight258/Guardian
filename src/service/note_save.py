@@ -12,7 +12,7 @@ from src.crud.source import (
 from src.service.graph import GraphService
 
 
-def ingest_obsidian_note(
+def save_obsidian_note(
     session: Session,
     *,
     path: Path,

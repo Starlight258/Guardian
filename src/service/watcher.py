@@ -10,7 +10,7 @@ from watchdog.observers import Observer
 
 from src.db import SessionLocal
 from src.service.graph import GraphService
-from src.service.note_ingest import delete_obsidian_note, ingest_obsidian_note, move_obsidian_note
+from src.service.note_save import delete_obsidian_note, move_obsidian_note, save_obsidian_note
 from src.utils import obsidian_paths_from_env
 
 SessionFactory = Callable[[], Session]
@@ -64,7 +64,7 @@ class ObsidianEventHandler(FileSystemEventHandler):
             path = Path(str(event.src_path))
             self._debouncer.schedule(
                 f"file:{path}",
-                lambda: self._with_session(ingest_obsidian_note, path=path),
+                lambda: self._with_session(save_obsidian_note, path=path),
             )
 
     def on_modified(self, event: FileSystemEvent) -> None:
@@ -72,7 +72,7 @@ class ObsidianEventHandler(FileSystemEventHandler):
             path = Path(str(event.src_path))
             self._debouncer.schedule(
                 f"file:{path}",
-                lambda: self._with_session(ingest_obsidian_note, path=path),
+                lambda: self._with_session(save_obsidian_note, path=path),
             )
 
     def on_deleted(self, event: FileSystemEvent) -> None:

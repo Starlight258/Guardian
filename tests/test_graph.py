@@ -20,7 +20,7 @@ from src.service.embed import (
     VectorSearchResult,
 )
 from src.service.graph import GraphService
-from src.service.note_ingest import ingest_obsidian_note
+from src.service.note_save import save_obsidian_note
 
 
 def make_session_factory() -> Callable[[], Session]:
@@ -85,8 +85,8 @@ def test_connect_chunks_stores_vectors_and_edges_for_similar_candidates(tmp_path
     second_note.write_text("alpha beta delta", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=first_note, graph_service=graph_service)
-        ingest_obsidian_note(session, path=second_note, graph_service=graph_service)
+        save_obsidian_note(session, path=first_note, graph_service=graph_service)
+        save_obsidian_note(session, path=second_note, graph_service=graph_service)
 
     with session_factory() as session:
         chunks = list(session.scalars(select(Chunk)))
@@ -113,8 +113,8 @@ def test_connect_chunks_skips_candidates_below_similarity_threshold(tmp_path: Pa
     second_note.write_text("unrelated context", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=first_note, graph_service=graph_service)
-        ingest_obsidian_note(session, path=second_note, graph_service=graph_service)
+        save_obsidian_note(session, path=first_note, graph_service=graph_service)
+        save_obsidian_note(session, path=second_note, graph_service=graph_service)
 
     with session_factory() as session:
         edges = list(session.scalars(select(GraphEdge)))
@@ -183,7 +183,7 @@ def test_ingest_rolls_back_new_vectors_when_commit_fails(
     note_path.write_text("alpha beta gamma", encoding="utf-8")
 
     with session_factory() as session:
-        ingest_obsidian_note(session, path=note_path, graph_service=graph_service)
+        save_obsidian_note(session, path=note_path, graph_service=graph_service)
 
     with session_factory() as session:
         old_chunk = session.scalar(select(Chunk))
@@ -198,7 +198,7 @@ def test_ingest_rolls_back_new_vectors_when_commit_fails(
             lambda: (_ for _ in ()).throw(RuntimeError("commit failed")),
         )
         with pytest.raises(RuntimeError, match="commit failed"):
-            ingest_obsidian_note(session, path=note_path, graph_service=graph_service)
+            save_obsidian_note(session, path=note_path, graph_service=graph_service)
 
     with session_factory() as session:
         chunks = list(session.scalars(select(Chunk)))
