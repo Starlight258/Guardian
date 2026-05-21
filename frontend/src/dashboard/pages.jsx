@@ -143,11 +143,29 @@ export function OverviewPage({ data, onNavigate }) {
 export function MemoryGraphPage({ data }) {
   const [selectedId, setSelectedId] = useState(data.graphNodes[0]?.id);
   const sel = data.graphNodes.find((n) => n.id === selectedId);
-  const clusterLabel = { AI: 'AI 개발 도구', async: '비동기 프로그래밍', vec: '벡터 DB & 임베딩', graph: '지식 그래프 구현' };
-  const snippet = `이 노드는 ${clusterLabel[sel?.cluster] || ''} 클러스터에 속해요. 새로운 chunk가 추가되면 Chroma top-k retrieval과 NetworkX 인접 노드 주입을 거쳐 Recall Agent로 전달되며, 단일 LLM call로 relevance score가 계산돼요.`;
+
+  const clusterLabel = {
+    claude: 'Claude 대화',
+    obsidian: 'Obsidian 노트',
+    checkpoint: 'Session Checkpoint',
+    AI: 'AI 개발 도구',
+    async: '비동기 프로그래밍',
+    vec: '벡터 DB & 임베딩',
+    graph: '지식 그래프 구현',
+  };
+
   const nodeCount = data.graphNodes.length;
-  const linkCount = 89;
-  const sourceCount = 24;
+  const linkCount = data._edgeCount ?? 89;
+  const sourceCount = data._sourceCount ?? 24;
+
+  const sourceName = sel?.source_title
+    || (sel?.source_path ? sel.source_path.split('/').pop() : null)
+    || '—';
+  const chunkIndex = sel?.chunk_index ?? ((sel?.id ?? 0) % 12);
+  const tokenCount = sel?.token_count ?? 412;
+  const snippet = sel?.snippet || '노드를 선택하면 snippet이 표시돼요.';
+  const chunkId = sel?.id || '—';
+
   return (
     <div className="graph-page">
       <div className="graph-canvas-wrap">
@@ -159,22 +177,22 @@ export function MemoryGraphPage({ data }) {
         <MemoryGraphCanvas nodes={data.graphNodes} selectedId={selectedId} onSelect={(n) => setSelectedId(n.id)} />
       </div>
       <div className="graph-detail">
-        <h3>chunk #{String(sel?.id).padStart(4, '0')}</h3>
+        <h3>chunk #{String(chunkIndex).padStart(4, '0')}</h3>
         <div className="graph-field">
           <div className="graph-field-label">Cluster</div>
-          <div className="graph-field-value">{clusterLabel[sel?.cluster]}</div>
+          <div className="graph-field-value">{clusterLabel[sel?.cluster] || sel?.cluster || '—'}</div>
         </div>
         <div className="graph-field">
           <div className="graph-field-label">Source</div>
-          <div className="graph-field-value">python-async-notes.md</div>
+          <div className="graph-field-value">{sourceName}</div>
         </div>
         <div className="graph-field">
           <div className="graph-field-label">Chunk index</div>
-          <div className="graph-field-value">{(sel?.id ?? 0) % 12}</div>
+          <div className="graph-field-value">{chunkIndex}</div>
         </div>
         <div className="graph-field">
           <div className="graph-field-label">Tokens</div>
-          <div className="graph-field-value">412</div>
+          <div className="graph-field-value">{tokenCount}</div>
         </div>
         <div className="graph-field">
           <div className="graph-field-label">Snippet</div>
@@ -182,7 +200,7 @@ export function MemoryGraphPage({ data }) {
         </div>
         <div className="graph-field">
           <div className="graph-field-label">Chunk ID</div>
-          <div className="graph-field-value mono">019e3f20-ae06-71b1-a4ed-353ca2c{String(sel?.id || 0).padStart(2, '0')}</div>
+          <div className="graph-field-value mono">{chunkId}</div>
         </div>
       </div>
     </div>

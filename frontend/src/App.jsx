@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import DATA from './dashboard/data';
 import Icon from './dashboard/icons';
+import useGuardianData from './dashboard/useGuardianData';
 import { TweakRadio, TweakSection, TweakToggle, TweaksPanel, useTweaks } from './dashboard/tweaks-panel';
 import {
   InsightsPage,
@@ -203,6 +204,7 @@ export default function App() {
   const [page, setPage] = useState('overview');
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [toast, setToast] = useState(false);
+  const { data, loading } = useGuardianData();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', t.theme);
@@ -216,21 +218,28 @@ export default function App() {
   }, [page, t.toastEnabled, t.angelMood]);
 
   const renderPage = () => {
+    if (loading) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-3)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
+          기억을 불러오는 중...
+        </div>
+      );
+    }
     switch (page) {
       case 'overview':
-        return <OverviewPage data={DATA} onNavigate={setPage} />;
+        return <OverviewPage data={data} onNavigate={setPage} />;
       case 'graph':
-        return <MemoryGraphPage data={DATA} />;
+        return <MemoryGraphPage data={data} />;
       case 'timeline':
-        return <TimelinePage data={DATA} />;
+        return <TimelinePage data={data} />;
       case 'topics':
-        return <TopicsPage data={DATA} />;
+        return <TopicsPage data={data} />;
       case 'recall':
-        return <RecallHistoryPage data={DATA} />;
+        return <RecallHistoryPage data={data} />;
       case 'insights':
-        return <InsightsPage data={DATA} />;
+        return <InsightsPage data={data} />;
       case 'settings':
-        return <SettingsPage data={DATA} />;
+        return <SettingsPage data={data} />;
       default:
         return null;
     }
