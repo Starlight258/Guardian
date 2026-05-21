@@ -6,8 +6,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.deps import get_db
-from src.schemas.graph import GraphEdgeResponse, GraphNodeResponse
-from src.service.graph_read import get_graph_edges, get_graph_nodes
+from src.schemas.graph import (
+    DashboardStatsResponse,
+    GraphEdgeResponse,
+    GraphNodeResponse,
+    GrowthPoint,
+    SourceSummary,
+    TopConnection,
+)
+from src.service.graph_read import get_graph_edges, get_graph_nodes, get_stats
 
 router = APIRouter(prefix="/graph", tags=["graph"])
 DBSession = Depends(get_db)
@@ -63,3 +70,20 @@ def list_graph_edges(db: Session = DBSession) -> list[GraphEdgeResponse]:
         )
         for edge in get_graph_edges(db)
     ]
+
+
+@router.get("/stats", response_model=DashboardStatsResponse)
+def dashboard_stats(db: Session = DBSession) -> DashboardStatsResponse:
+    raw = get_stats(db)
+    return DashboardStatsResponse(
+        total_chunks=raw["total_chunks"],
+        total_edges=raw["total_edges"],
+        total_sources=raw["total_sources"],
+        chunks_today=raw["chunks_today"],
+        edges_today=raw["edges_today"],
+        sources_today=raw["sources_today"],
+        source_type_counts=raw["source_type_counts"],
+        growth_30d=[GrowthPoint(**p) for p in raw["growth_30d"]],
+        top_connections=[TopConnection(**c) for c in raw["top_connections"]],
+        recent_sources=[SourceSummary(**s) for s in raw["recent_sources"]],
+    )
