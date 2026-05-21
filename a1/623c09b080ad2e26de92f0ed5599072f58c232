@@ -1,0 +1,27 @@
+frontend/src/dashboard/pages.jsx
+  s_97a69406bf1b41::t_a25ca63b9b5870 146-156,158-168,180,183,187,191,195,203
+frontend/src/dashboard/api.js
+  s_97a69406bf1b41::t_9da3eb30f5b077 1-9
+frontend/src/App.jsx
+  s_97a69406bf1b41::t_3956f1742362c4 207
+  s_97a69406bf1b41::t_dc0151b9a88534 221-227,230,232,234,236,238,240,242
+  s_97a69406bf1b41::t_e5c3f78f9e4b46 4
+frontend/src/dashboard/useGuardianData.js
+  s_97a69406bf1b41::t_da142df8ee0d6b 1-172
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "a1623c09b080ad2e26de92f0ed5599072f58c232",
+  "prompts": {},
+  "sessions": {
+    "s_97a69406bf1b41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36f42e33-5fb9-4874-b7f1-85e19a5d4957",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
