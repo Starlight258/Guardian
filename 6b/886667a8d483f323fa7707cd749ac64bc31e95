@@ -1,0 +1,33 @@
+src/api/graph.py
+  s_97a69406bf1b41::t_28f4b1ebb83e59 73-89
+  s_97a69406bf1b41::t_ffff0db2bc9b0c 9-12,14-17
+  ai_agent 13
+src/schemas/graph.py
+  s_97a69406bf1b41::t_77aca91967cd07 30-64
+alembic/versions/0003_add_sources_session_id.py
+  ai_agent 1-29
+src/crud/graph.py
+  s_97a69406bf1b41::t_9011e62ff80b5f 52-54
+  s_97a69406bf1b41::t_75d6eb0b323edc 4-7
+  s_97a69406bf1b41::t_e28842f18408d0 36-39,41,43-47,59-67,71-161
+  s_97a69406bf1b41::t_c47c2f369be1c3 68-70
+  s_97a69406bf1b41::t_99d5f3dc57a169 48-51,55-58
+src/service/graph_read.py
+  s_97a69406bf1b41::t_9630dd271c531f 5,15-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "6b886667a8d483f323fa7707cd749ac64bc31e95",
+  "prompts": {},
+  "sessions": {
+    "s_97a69406bf1b41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36f42e33-5fb9-4874-b7f1-85e19a5d4957",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
