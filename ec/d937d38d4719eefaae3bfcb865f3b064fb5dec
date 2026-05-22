@@ -1,0 +1,23 @@
+uv.lock
+  ai_agent 158-226,379-437,675,696,817-825,1051-1075,1818-1826,1967-1980,2036-2063,2653-2663
+pyproject.toml
+  s_4e0f120c9b07c9::t_79945cca084810 11,20-21
+src/mcp_server.py
+  s_4e0f120c9b07c9::t_0c5149f8fbf9b7 1-100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "ecd937d38d4719eefaae3bfcb865f3b064fb5dec",
+  "prompts": {},
+  "sessions": {
+    "s_4e0f120c9b07c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4f07-83db-7853-8376-b1382b7fa619",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
