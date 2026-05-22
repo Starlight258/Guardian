@@ -59,13 +59,13 @@ Dashboard: http://127.0.0.1:5173
 ```json
 {
   "hooks": {
-    "Stop": [
+    "SessionEnd": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "hooks/session_checkpoint_guardian.sh"
+            "command": "python3 ./hooks/transcript_summary.py | ./hooks/session_checkpoint_guardian.sh || true"
           }
         ]
       }
@@ -76,7 +76,7 @@ Dashboard: http://127.0.0.1:5173
         "hooks": [
           {
             "type": "command",
-            "command": "hooks/guardian_hook.sh"
+            "command": "cat | ./hooks/guardian_hook.sh || true"
           }
         ]
       }
@@ -85,8 +85,9 @@ Dashboard: http://127.0.0.1:5173
 }
 ```
 
-- `Stop`: 세션이 끝날 때 대화 요약을 Guardian에 저장해요.
+- `SessionEnd`: 세션이 끝날 때 `transcript_summary.py`가 대화 내용을 요약하고, 그 결과를 `session_checkpoint_guardian.sh`가 Guardian에 저장해요.
 - `UserPromptSubmit`: 프롬프트를 입력할 때마다 Recall Agent를 트리거해요. `dispatch_recall` 연결 완료 후 활성화돼요.
+- `|| true`: hook 실패 시 Claude Code 흐름을 막지 않아요.
 
 ---
 
