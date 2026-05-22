@@ -1,0 +1,27 @@
+src/main.py
+  s_4e0f120c9b07c9::t_ed456b6c689e68 10,13,25,41
+src/api/recall.py
+  s_4e0f120c9b07c9::t_9f73c7d15230a2 1-52
+src/service/recall.py
+  s_4e0f120c9b07c9::t_b207a1946ffe09 342-344,357-359,372-374,385-387,478-485,533-538
+  s_4e0f120c9b07c9::t_259f9538fab794 11
+  s_4e0f120c9b07c9::t_d916b9089583d5 1-10,12-341,345-356,360-371,375-384,388-477,486-532,539-580
+src/schemas/recall.py
+  s_4e0f120c9b07c9::t_69f60840359c3f 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "97cdf3312838d670cc1c3dc802ef5e78742bf0ea",
+  "prompts": {},
+  "sessions": {
+    "s_4e0f120c9b07c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4f07-83db-7853-8376-b1382b7fa619",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
