@@ -169,9 +169,13 @@ def test_capture_session_checkpoint_dedupes_by_session_id() -> None:
     )
 
     with session_factory() as session:
-        first = capture_session_checkpoint(session, checkpoint=checkpoint, graph_service=graph_service)
+        first = capture_session_checkpoint(
+            session, checkpoint=checkpoint, graph_service=graph_service
+        )
     with session_factory() as session:
-        second = capture_session_checkpoint(session, checkpoint=checkpoint, graph_service=graph_service)
+        second = capture_session_checkpoint(
+            session, checkpoint=checkpoint, graph_service=graph_service
+        )
 
     with session_factory() as session:
         sources = list(session.scalars(select(Source)))
