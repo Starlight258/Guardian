@@ -26,7 +26,7 @@ def test_prompt_event_triggers_recall_for_long_prompt(monkeypatch) -> None:
     prompt = " ".join(f"token{i}" for i in range(50))
     captured_contexts = []
 
-    def fake_dispatch(context):
+    def fake_dispatch(context, *, db=None, recall_agent=None):
         captured_contexts.append(context)
         return RecallTriggerResult(
             status="accepted",

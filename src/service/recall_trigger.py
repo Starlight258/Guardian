@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.utils import count_tokens
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
+    from src.service.recall import RecallAgent
 
 MIN_PROMPT_TOKENS = 50
 
@@ -33,6 +38,8 @@ def trigger_recall_from_prompt(
     cwd: str | None = None,
     transcript_path: str | None = None,
     metadata: dict[str, Any] | None = None,
+    db: Session | None = None,
+    recall_agent: RecallAgent | None = None,
 ) -> RecallTriggerResult:
     token_count = count_tokens(prompt)
     if token_count < MIN_PROMPT_TOKENS:
@@ -51,10 +58,24 @@ def trigger_recall_from_prompt(
         transcript_path=transcript_path,
         metadata=metadata or {},
     )
-    return dispatch_recall(context)
+    return dispatch_recall(context, db=db, recall_agent=recall_agent)
 
 
-def dispatch_recall(context: PromptContext) -> RecallTriggerResult:
+def dispatch_recall(
+    context: PromptContext,
+    *,
+    db: Session | None = None,
+    recall_agent: RecallAgent | None = None,
+) -> RecallTriggerResult:
+    if db is not None and recall_agent is not None:
+        recall_agent.recall(
+            db,
+            prompt=context.prompt,
+            session_id=context.session_id,
+            cwd=context.cwd,
+            transcript_path=context.transcript_path,
+            metadata=context.metadata,
+        )
     return RecallTriggerResult(
         status="accepted",
         token_count=context.token_count,

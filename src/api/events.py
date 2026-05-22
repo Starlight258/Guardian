@@ -25,14 +25,21 @@ def _extract_prompt(event: PromptEventRequest) -> str:
 
 
 @router.post("/prompt", response_model=PromptEventResponse)
-def receive_prompt_event(event: PromptEventRequest) -> PromptEventResponse:
+def receive_prompt_event(
+    event: PromptEventRequest,
+    request: Request,
+    db: Session = DBSession,
+) -> PromptEventResponse:
     prompt = _extract_prompt(event)
+    recall_agent = getattr(request.app.state, "recall_agent", None)
     result = trigger_recall_from_prompt(
         prompt=prompt,
         session_id=event.session_id,
         cwd=event.cwd,
         transcript_path=event.transcript_path,
         metadata=event.metadata,
+        db=db,
+        recall_agent=recall_agent,
     )
 
     return PromptEventResponse(
