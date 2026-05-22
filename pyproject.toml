@@ -8,6 +8,7 @@ dependencies = [
     "alembic>=1.13.0",
     "chromadb>=0.5.0",
     "fastapi>=0.115.0",
+    "mcp>=1.0.0",
     "networkx>=3.3",
     "python-dotenv>=1.0.0",
     "sentence-transformers>=3.0.0",
@@ -15,6 +16,9 @@ dependencies = [
     "uvicorn[standard]>=0.30.0",
     "watchdog>=6.0.0",
 ]
+
+[project.scripts]
+guardian-mcp = "src.mcp_server:main"
 
 [dependency-groups]
 dev = [
