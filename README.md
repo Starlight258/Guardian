@@ -52,6 +52,42 @@ npm run dev
 
 Dashboard: http://127.0.0.1:5173
 
+### 3. Claude Code Hooks
+
+세션 체크포인트 자동 저장과 Recall 트리거를 활성화하려면 `.claude/settings.json`에 등록해요.
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/session_checkpoint_guardian.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/guardian_hook.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+- `Stop`: 세션이 끝날 때 대화 요약을 Guardian에 저장해요.
+- `UserPromptSubmit`: 프롬프트를 입력할 때마다 Recall Agent를 트리거해요. `dispatch_recall` 연결 완료 후 활성화돼요.
+
 ---
 
 ## Architecture
