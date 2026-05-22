@@ -1,0 +1,19 @@
+tests/test_checkpoint.py
+  s_97a69406bf1b41::t_c7b89c33916e36 172-174,176-178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "ccaf9a46f274eafc36114f8e440c3c91dff2b120",
+  "prompts": {},
+  "sessions": {
+    "s_97a69406bf1b41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36f42e33-5fb9-4874-b7f1-85e19a5d4957",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
