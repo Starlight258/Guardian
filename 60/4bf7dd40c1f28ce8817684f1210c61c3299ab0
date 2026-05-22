@@ -1,0 +1,19 @@
+tests/test_mcp_server.py
+  s_4e0f120c9b07c9::t_4c6e2864e3f93d 1-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "604bf7dd40c1f28ce8817684f1210c61c3299ab0",
+  "prompts": {},
+  "sessions": {
+    "s_4e0f120c9b07c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4f07-83db-7853-8376-b1382b7fa619",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
