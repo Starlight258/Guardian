@@ -108,6 +108,12 @@ Success gate: `POST /recall` → tool_use output 파싱, relevance_score ≥ 0.7
 Hard problem touch: **yes**
 `/iterate` command: `/iterate implement Recall Agent — POST /recall endpoint, current context → Chroma top-k=5 retrieval → NetworkX neighbor injection, then single Claude LLM call with tool_use forced (angel_output tool: chunk_ids, evidence_sources, relevance_score, angel_message maxLength 120), Guardrails post-processing, save recall_logs with input_hash/retrieved_chunk_ids/evidence_source_ids/drop_reason/angel_message, with angel_message persistence configurable`
 
+### F8 — MCP Server | P1
+Files: `src/mcp_server.py`
+Success gate: Claude Code에서 `recall` tool 호출 → Angel status line 표시 + 근거 노트 payload 반환
+Hard problem touch: no
+`/iterate` command: `/iterate implement MCP server exposing single 'recall' tool that calls POST /recall internally and returns angel_message plus evidence_sources for Claude Code status line display and note references`
+
 ### F9 — LLM Resilience Layer | P2
 Files: `src/llm.py`
 Success gate:
@@ -117,12 +123,6 @@ Success gate:
 - LocalLLMClient tool_use 파싱 실패 → `None` 반환, Angel silent skip
 Hard problem touch: no
 `/iterate` command: `/iterate implement LLMClient Protocol with AnthropicLLMClient and LocalLLMClient (Ollama OpenAI-compatible endpoint, qwen2.5:7b). Circuit Breaker: CLOSED→OPEN on 3 consecutive failures (APIStatusError ≥500 / APIConnectionError / timeout>10s), OPEN→HALF_OPEN after 60s, HALF_OPEN→CLOSED on probe success. LocalLLMClient wraps tool_use parse in try/except returning None on JSONDecodeError/KeyError/ValidationError. GUARDIAN_LLM_PROVIDER and GUARDIAN_LOCAL_MODEL env vars.`
-
-### F8 — MCP Server | P1
-Files: `src/mcp_server.py`
-Success gate: Claude Code에서 `recall` tool 호출 → Angel status line 표시 + 근거 노트 payload 반환
-Hard problem touch: no
-`/iterate` command: `/iterate implement MCP server exposing single 'recall' tool that calls POST /recall internally and returns angel_message plus evidence_sources for Claude Code status line display and note references`
 
 ---
 
