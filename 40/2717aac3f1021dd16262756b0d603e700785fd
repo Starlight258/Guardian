@@ -1,0 +1,24 @@
+tests/test_events.py
+  s_97a69406bf1b41::t_8bee212f7e7022 29
+src/service/recall_trigger.py
+  s_97a69406bf1b41::t_446e12983573f1 4,8-11
+  s_97a69406bf1b41::t_0f76a46e618523 41-42,61,64-78
+src/api/events.py
+  s_97a69406bf1b41::t_f12cabb598f2cf 28-32,34,41-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "402717aac3f1021dd16262756b0d603e700785fd",
+  "prompts": {},
+  "sessions": {
+    "s_97a69406bf1b41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36f42e33-5fb9-4874-b7f1-85e19a5d4957",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
