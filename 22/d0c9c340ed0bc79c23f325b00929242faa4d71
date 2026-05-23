@@ -1,0 +1,20 @@
+README.md
+  s_4875f5cde985cb::t_814054f869a1dc 21,28,55,69-71,75-79,111,120-126,128,140,163,188
+  s_4875f5cde985cb::t_e19469cc79de72 112-119,127,129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "22d0c9c340ed0bc79c23f325b00929242faa4d71",
+  "prompts": {},
+  "sessions": {
+    "s_4875f5cde985cb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e5491-7d2d-7313-9ab4-ccf79be30604",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
