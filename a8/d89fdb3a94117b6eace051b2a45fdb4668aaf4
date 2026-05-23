@@ -1,0 +1,53 @@
+src/service/embed.py
+  s_489ce188f12618::t_d3fe2b84f4652e 1
+  s_489ce188f12618::t_de1125aa83b5b1 29
+src/service/watcher.py
+  s_489ce188f12618::t_19149350db1019 27
+  s_489ce188f12618::t_0b8270b9cfbcbc 1
+src/service/recall_trigger.py
+  s_489ce188f12618::t_129b62cdbde894 66
+  s_489ce188f12618::t_6910cdf4777095 1
+src/service/note_save.py
+  s_489ce188f12618::t_023b24ca1a0f91 33
+  s_489ce188f12618::t_d725830f52e0bc 1
+src/main.py
+  s_489ce188f12618::t_0f0be83e69397d 1
+src/api/events.py
+  s_489ce188f12618::t_3aa639d7fd227b 1
+  s_489ce188f12618::t_9e73719c5cdb53 22
+src/api/graph.py
+  s_489ce188f12618::t_a28a62a97a1e05 1
+  s_489ce188f12618::t_bc2fd0d712b9f0 25
+src/utils.py
+  s_489ce188f12618::t_7462eceb976a7e 1
+src/llm.py
+  s_489ce188f12618::t_4cc799c09e7e5d 229
+  s_489ce188f12618::t_e25918a3ee6118 1
+  s_489ce188f12618::t_b514a7f7616efb 26
+  s_489ce188f12618::t_e9dba2f3a3e723 203
+  s_489ce188f12618::t_2927a9fd8718e8 160
+  s_489ce188f12618::t_e08cdd3d6132a1 217
+src/service/graph.py
+  s_489ce188f12618::t_fa2ecd73a2f15b 61
+  s_489ce188f12618::t_c2b5efca364f3b 1
+src/service/checkpoint.py
+  s_489ce188f12618::t_dc874017c8fd36 1
+src/db.py
+  s_489ce188f12618::t_bf4bbd18710825 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "a8d89fdb3a94117b6eace051b2a45fdb4668aaf4",
+  "prompts": {},
+  "sessions": {
+    "s_489ce188f12618": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e6ac0dcb-b415-4147-afaf-1f780b42a6d3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
