@@ -37,7 +37,7 @@ Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 
 
 ---
 
-## Local Run
+## Getting Started
 
 ### 1. API + Frontend
 
@@ -52,13 +52,13 @@ docker compose up --build
 
 ### 2. MCP Server
 
-프로젝트 루트의 `.mcp.json`에 등록돼 있어요. Claude Code에서 이 프로젝트를 열면 자동으로 실행돼요.
+`.mcp.json`에 등록돼 있어요. Claude Code에서 이 프로젝트를 열면 자동으로 실행돼요.
 
 ### 3. Ollama (선택사항)
 
-Anthropic API 장애 시 Circuit Breaker가 자동으로 Ollama로 전환해요. 평소엔 없어도 되지만, 설치해두면 API 장애 중에도 Recall이 동작해요.
+API 장애 시 Circuit Breaker가 자동으로 Ollama로 전환해요. 평소엔 없어도 돼요.
 
-macOS에서는 Docker 대신 로컬 설치를 권장해요 — Docker는 Apple Silicon GPU(Metal)를 사용할 수 없어서 속도 차이가 커요.
+macOS에서는 Docker 대신 로컬 설치를 권장해요. Docker는 Apple Silicon GPU(Metal)를 사용할 수 없어서 속도 차이가 커요.
 
 ```bash
 brew install ollama
@@ -68,7 +68,7 @@ ollama serve
 
 ### 4. Claude Code Hooks
 
-세션 체크포인트 자동 저장과 Recall 트리거를 활성화하려면 `.claude/settings.json`에 등록해요.
+`.claude/settings.json`에 추가해요.
 
 ```json
 {
@@ -99,7 +99,7 @@ ollama serve
 }
 ```
 
-- `SessionEnd`: 세션이 끝날 때 `transcript_summary.py`가 대화 내용을 요약하고, 그 결과를 `session_checkpoint_guardian.sh`가 Guardian에 저장해요.
+- `SessionEnd`: 세션 종료 시 대화를 요약해 Guardian에 저장해요.
 - `UserPromptSubmit`: 프롬프트를 입력할 때마다 Recall Agent를 트리거해요.
 - `|| true`: hook 실패 시 Claude Code 흐름을 막지 않아요.
 
@@ -141,17 +141,17 @@ flowchart LR
 
 ---
 
-## Angel Flow
+## How It Works
 
-Angel이 뜨기까지의 단일 에이전트 파이프라인이에요.
+단일 에이전트 파이프라인이에요.
 
-**Recall Agent** : 현재 작업 컨텍스트를 받아 Chroma 벡터 검색과 NetworkX 그래프 순회로 관련 청크를 선별한 뒤, 단일 LLM call로 Angel 메시지와 관련성 점수를 생성해요. 메시지에는 근거가 되는 노트나 checkpoint가 함께 첨부돼요.
+**Recall Agent**: 컨텍스트로 Chroma 벡터 검색과 NetworkX 그래프 순회로 연관된 청크를 선별하고, 단일 LLM call로 Angel 메시지와 관련성 점수를 생성해요. 근거가 된 노트나 checkpoint가 첨부돼요.
 
-**Guardrails** : Recall Agent 출력의 관련성 점수가 threshold 아래면 Angel을 silent drop해요. False positive를 막아서 Angel이 의미 있을 때만 떠요.
+**Guardrails**: 관련성 점수가 threshold 아래면 Angel을 silent drop해요.
 
-> LLM 기반 query rewrite와 multi-agent 구조는 의도적으로 채택하지 않았어요. 
-Angel은 백그라운드 트리거라 지연이 길어지면 안되기 때문이에요. 
-RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 그때 분리해요.
+> LLM 기반 query rewrite와 multi-agent 구조는 채택하지 않았어요.
+Angel은 백그라운드 트리거라 지연이 길어지면 안 되기 때문이에요.
+RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 분리해요.
 
 ---
 
