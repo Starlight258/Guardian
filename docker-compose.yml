@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - huggingface_cache:/root/.cache/huggingface
+      # Obsidian vault — same path as GUARDIAN_OBSIDIAN_PATHS in .env
+      - "/Users/mae/Library/Mobile Documents/iCloud~md~obsidian:/Users/mae/Library/Mobile Documents/iCloud~md~obsidian:ro"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://api:8000
+    depends_on:
+      - api
+
+volumes:
+  huggingface_cache:

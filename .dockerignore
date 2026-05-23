@@ -1,0 +1,11 @@
+.git
+__pycache__
+**/*.pyc
+**/__pycache__
+.env
+.venv
+data/
+frontend/node_modules
+frontend/dist
+.claude
+.codex
