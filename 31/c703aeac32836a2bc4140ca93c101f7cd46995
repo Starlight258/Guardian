@@ -1,0 +1,28 @@
+src/service/reindex.py
+  s_ec3b8d4846fe14::t_16b5ba892004b4 1-4,6-29,33,41-47
+  s_ec3b8d4846fe14::t_970a94ff25e156 5
+  s_ec3b8d4846fe14::t_7e024fd478be64 30-32,34-40
+src/main.py
+  s_ec3b8d4846fe14::t_970a94ff25e156 3
+  s_ec3b8d4846fe14::t_24b3a57806a689 9,17
+  s_ec3b8d4846fe14::t_fb16ec88006f1f 35-39
+  s_ec3b8d4846fe14::t_dced9e737d7cb6 48
+src/api/admin.py
+  s_ec3b8d4846fe14::t_3883524e24998c 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "31c703aeac32836a2bc4140ca93c101f7cd46995",
+  "prompts": {},
+  "sessions": {
+    "s_ec3b8d4846fe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b078cb7-278e-446b-aae2-28f1f3b4c688",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
