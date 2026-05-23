@@ -56,12 +56,6 @@ Docker 사용 여부와 관계없이 로컬에서 따로 실행해요. Claude Co
 
 프로젝트 루트의 `.mcp.json`에 이미 등록돼 있어요. Claude Code에서 이 프로젝트를 열면 자동으로 인식해요.
 
-수동으로 실행할 때:
-
-```bash
-uv run guardian-mcp
-```
-
 ### 3. Claude Code Hooks
 
 세션 체크포인트 자동 저장과 Recall 트리거를 활성화하려면 `.claude/settings.json`에 등록해요.
