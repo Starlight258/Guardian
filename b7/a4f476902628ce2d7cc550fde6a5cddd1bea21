@@ -1,0 +1,19 @@
+README.md
+  s_ec3b8d4846fe14::t_729973ce19e812 42,45-58,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "b7a4f476902628ce2d7cc550fde6a5cddd1bea21",
+  "prompts": {},
+  "sessions": {
+    "s_ec3b8d4846fe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b078cb7-278e-446b-aae2-28f1f3b4c688",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
