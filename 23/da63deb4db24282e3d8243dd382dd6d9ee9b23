@@ -1,0 +1,19 @@
+Dockerfile.api
+  s_489ce188f12618::t_53e3d2045c9278 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "23da63deb4db24282e3d8243dd382dd6d9ee9b23",
+  "prompts": {},
+  "sessions": {
+    "s_489ce188f12618": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e6ac0dcb-b415-4147-afaf-1f780b42a6d3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
