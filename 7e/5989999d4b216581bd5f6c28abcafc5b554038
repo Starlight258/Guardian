@@ -1,0 +1,28 @@
+README.md
+  s_489ce188f12618::t_5d96abd0f55ebe 40
+  s_489ce188f12618::t_3b83afa150953e 102
+  s_489ce188f12618::t_87a7650de2e247 144
+  s_489ce188f12618::t_44aabd45667c33 150
+  s_489ce188f12618::t_d5f599180d83d9 146
+  s_489ce188f12618::t_41aae9e5976081 148
+  s_489ce188f12618::t_2fe37b37d81e3d 152-154
+  s_489ce188f12618::t_5f05594ed61f6f 55
+  s_489ce188f12618::t_6ba6cc3771886e 71
+  s_489ce188f12618::t_f83fbeb7b4fd72 59,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "7e5989999d4b216581bd5f6c28abcafc5b554038",
+  "prompts": {},
+  "sessions": {
+    "s_489ce188f12618": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e6ac0dcb-b415-4147-afaf-1f780b42a6d3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
