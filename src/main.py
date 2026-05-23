@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+from src.api.admin import router as admin_router
 from src.api.events import router as events_router
 from src.api.graph import router as graph_router
 from src.api.recall import router as recall_router
@@ -12,6 +14,7 @@ from src.db import SessionLocal
 from src.llm import make_llm_client
 from src.service.graph import GraphService
 from src.service.recall import RecallAgent
+from src.service.reindex import ReindexState, run_initial_reindex
 from src.service.watcher import create_watchers_from_env
 
 load_dotenv()
@@ -29,6 +32,11 @@ async def lifespan(app: FastAPI):
     for watcher in watchers:
         watcher.start()
     app.state.obsidian_watchers = watchers
+
+    reindex_state = ReindexState()
+    app.state.reindex_state = reindex_state
+    asyncio.create_task(run_initial_reindex(reindex_state, graph_service))
+
     try:
         yield
     finally:
@@ -37,6 +45,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Guardian", version="0.1.0", lifespan=lifespan)
+app.include_router(admin_router)
 app.include_router(events_router)
 app.include_router(graph_router)
 app.include_router(recall_router)
