@@ -1,0 +1,41 @@
+src/crud/source.py
+  s_dcdcc9d5269a16::t_75404d48a3d761 48,58,63
+src/api/admin.py
+  s_dcdcc9d5269a16::t_78abbc38b3d2ed 15
+src/service/reindex.py
+  s_dcdcc9d5269a16::t_e5effa49550652 8-10,12,23,36-44,47-50,58-61,64-67
+src/models.py
+  s_489ce188f12618::t_78d810d0b0191b 1
+  s_dcdcc9d5269a16::t_3e1a428c16cee8 35
+alembic/versions/0004_add_sources_file_mtime.py
+  s_dcdcc9d5269a16::t_3f6937537f5c10 1-27
+src/service/recall.py
+  s_dcdcc9d5269a16::t_73047c76953fac 401-402
+  s_489ce188f12618::t_56c046adaa0279 1
+  s_489ce188f12618::t_a31f8dafdc03d8 80
+  s_489ce188f12618::t_3c9edd8ed15e28 185
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "d78ae630bf850fb94dc7e269fdba269e802b837c",
+  "prompts": {},
+  "sessions": {
+    "s_489ce188f12618": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e6ac0dcb-b415-4147-afaf-1f780b42a6d3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    },
+    "s_dcdcc9d5269a16": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b8c40e3-2ae7-4028-bb88-9168abadc48e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
