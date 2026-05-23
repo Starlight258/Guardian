@@ -39,15 +39,29 @@ Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 
 
 ## Local Run
 
-### 1. Backend
+### Docker (권장)
 
 ```bash
+docker compose up --build
+```
+
+- API: http://127.0.0.1:8000
+- Dashboard: http://127.0.0.1:5173
+
+첫 실행 시 `BAAI/bge-m3` 모델을 다운받아요. 이후에는 `huggingface_cache` volume에서 재사용해요.
+
+### 수동 실행
+
+#### 1. Backend
+
+```bash
+uv run alembic upgrade head
 uv run uvicorn src.main:app --host 127.0.0.1 --port 8000
 ```
 
 API docs: http://127.0.0.1:8000/docs
 
-### 2. Frontend
+#### 2. Frontend
 
 ```bash
 cd frontend
