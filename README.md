@@ -39,47 +39,26 @@ Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 
 
 ## Local Run
 
-### Docker (권장)
+### 1. API + Frontend
 
 ```bash
 docker compose up --build
 ```
 
+첫 실행 시 `BAAI/bge-m3` 모델을 다운받아요. 이후에는 `huggingface_cache` volume에서 재사용해요.
+
 - API: http://127.0.0.1:8000
 - Dashboard: http://127.0.0.1:5173
 
-첫 실행 시 `BAAI/bge-m3` 모델을 다운받아요. 이후에는 `huggingface_cache` volume에서 재사용해요.
+### 2. MCP Server
 
-### 수동 실행
-
-#### 1. Backend
-
-```bash
-uv run alembic upgrade head
-uv run uvicorn src.main:app --host 127.0.0.1 --port 8000
-```
-
-API docs: http://127.0.0.1:8000/docs
-
-#### 2. Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Dashboard: http://127.0.0.1:5173
-
-### 3. MCP Server
+Docker 사용 여부와 관계없이 로컬에서 따로 실행해요. Claude Code가 직접 프로세스를 띄우는 방식이라 컨테이너 안에 넣을 수 없어요.
 
 ```bash
 uv run guardian-mcp
 ```
 
-Claude Code용 `recall` tool을 stdio MCP 서버로 띄워요.
-
-### 4. Claude Code Hooks
+### 3. Claude Code Hooks
 
 세션 체크포인트 자동 저장과 Recall 트리거를 활성화하려면 `.claude/settings.json`에 등록해요.
 
