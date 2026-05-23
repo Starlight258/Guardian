@@ -18,14 +18,14 @@ AI와 함께 만든 생각의 흔적을 자동으로 모으고, 연결하고, �
 
 AI와 작업하다 보면 비슷한 질문을 반복하게 돼요. 예전에 정리했던 노트나 커밋 맥락이 있어도, 코딩 중에는 다시 찾지 않게 돼요.
 
-Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 의미 기반으로 연결해서 하나의 그래프로 정리해줘요. Claude Code prompt event가 들어오면 현재 작업과 비슷한 과거 맥락을 찾아 Angel이 짧은 메시지를 띄워요.
+Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 의미 기반으로 연결해서 하나의 그래프로 정리해줘요. Claude Code와 Codex의 prompt event가 들어오면 현재 작업과 비슷한 과거 맥락을 찾아 Angel이 짧은 메시지를 띄워요.
 
 현재는 Capture, Connect, Recall의 핵심 경로가 동작해요.
 
 - Obsidian 노트와 session checkpoint를 자동 수집해요.
 - Chroma + NetworkX로 관련 맥락을 검색하고 연결해요.
 - `POST /recall`로 Recall Agent를 호출하고, `recall_logs`에 결과를 저장해요.
-- `guardian-mcp` FastMCP 서버로 Claude Code 쪽 recall tool을 노출해요.
+- `guardian-mcp` FastMCP 서버로 Claude Code와 Codex 쪽 recall tool을 노출해요.
 
 ---
 
@@ -52,7 +52,7 @@ docker compose up --build
 
 ### 2. MCP Server
 
-`.mcp.json`에 등록돼 있어요. Claude Code에서 이 프로젝트를 열면 자동으로 실행돼요.
+`.mcp.json`에 등록돼 있어요. Claude Code나 Codex에서 이 프로젝트를 열면 자동으로 실행돼요.
 
 ### 3. Ollama (선택사항)
 
@@ -66,9 +66,16 @@ ollama pull qwen2.5:3b
 ollama serve
 ```
 
-### 4. Claude Code Hooks
+### 4. Hooks
+
+#### Claude Code
 
 `.claude/settings.json`에 추가해요.
+
+| Event | What it does |
+|---|---|
+| `SessionEnd` | 세션 종료 시 대화를 요약해 Guardian에 저장해요. |
+| `UserPromptSubmit` | 프롬프트를 입력할 때마다 Recall Agent를 트리거해요. |
 
 ```json
 {
@@ -99,9 +106,26 @@ ollama serve
 }
 ```
 
-- `SessionEnd`: 세션 종료 시 대화를 요약해 Guardian에 저장해요.
-- `UserPromptSubmit`: 프롬프트를 입력할 때마다 Recall Agent를 트리거해요.
 - `|| true`: hook 실패 시 Claude Code 흐름을 막지 않아요.
+
+#### Codex
+
+`.codex/config.toml`에서 hooks 기능을 켜고, `.codex/hooks.json`에 훅을 넣어요.
+
+```toml
+[features]
+hooks = true
+```
+
+| Event | What it does |
+|---|---|
+| `SessionStart` | 시작 시 workspace 컨텍스트를 불러와요. |
+| `UserPromptSubmit` | 프롬프트가 들어올 때마다 recall trigger를 걸어요. |
+| `PostToolUse` | 도구 사용 후 결과를 후속 처리해요. |
+| `SessionEnd` | 세션 종료 시 checkpoint summary를 Guardian에 저장해요. |
+| `Stop` | 세션이 끝나기 직전에 후처리를 해요. |
+
+`.codex/hooks.json`의 실제 예시는 repo 안의 파일을 그대로 따라가면 돼요. `Entire CLI`가 없으면 훅은 조용히 건너뛰어요.
 
 ---
 
@@ -113,7 +137,7 @@ flowchart LR
   B[Session Checkpoints] --> C
   C --> D[Semantic Processing]
   D --> E[Knowledge Graph\nGraphRAG]
-  P[Claude Code Prompt Event] --> F[Recall Agent\nretrieval + response]
+  P[Claude Code / Codex Prompt Event] --> F[Recall Agent\nretrieval + response]
   E --> F
   F --> H{Guardrails\nconfidence threshold}
   H -->|pass| I[Angel + Dashboard]
@@ -136,7 +160,7 @@ flowchart LR
 | LLM Resilience | Circuit Breaker (Anthropic API 장애 시 Ollama qwen2.5:3b 자동 전환) |
 | Guardrails | Confidence scoring (threshold-based Angel trigger) |
 | Frontend | React + Vite + d3.js |
-| Claude integration | FastMCP + Hooks |
+| Claude Code / Codex integration | FastMCP + Hooks |
 | Evaluation | RAGAS |
 
 ---
@@ -161,7 +185,7 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 |---|---|
 | Obsidian notes | `watchdog` filesystem watcher |
 | Session checkpoints | session-end hook → rule-based summary |
-| Claude Code prompt events | `UserPromptSubmit` hook → realtime recall trigger |
+| Claude Code / Codex prompt events | `UserPromptSubmit` hook → realtime recall trigger |
 
 ---
 
