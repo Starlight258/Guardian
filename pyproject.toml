@@ -9,7 +9,6 @@ packages = ["src"]
 name = "guardian"
 version = "0.1.0"
 description = "Personal memory graph for AI-assisted work."
-readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.13.0",
