@@ -1,0 +1,19 @@
+README.md
+  s_4e0f120c9b07c9::t_b7c2097a01607c 23-28,60-68,102,138,169,171-176,189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "42d44931a199c0ece8c2984d3b73bd76aa872f91",
+  "prompts": {},
+  "sessions": {
+    "s_4e0f120c9b07c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4f07-83db-7853-8376-b1382b7fa619",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
