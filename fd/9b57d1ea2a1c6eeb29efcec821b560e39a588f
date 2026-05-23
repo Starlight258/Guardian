@@ -1,0 +1,27 @@
+Dockerfile.frontend
+  s_ec3b8d4846fe14::t_4ccd212761f0d2 1-11
+Dockerfile.api
+  s_ec3b8d4846fe14::t_dac4d1f9b6ca7c 1-11
+.dockerignore
+  s_ec3b8d4846fe14::t_e7a8061e74b108 1-11
+entrypoint.sh
+  s_ec3b8d4846fe14::t_7988b0414f38ae 1-4
+docker-compose.yml
+  s_ec3b8d4846fe14::t_6f74c5e316d4e3 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "fd9b57d1ea2a1c6eeb29efcec821b560e39a588f",
+  "prompts": {},
+  "sessions": {
+    "s_ec3b8d4846fe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b078cb7-278e-446b-aae2-28f1f3b4c688",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
