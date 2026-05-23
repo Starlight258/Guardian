@@ -1,3 +1,4 @@
+# Obsidian 볼트 워처: 파일 이벤트를 디바운스하고 노트를 Guardian에 동기화한다.
 from __future__ import annotations
 
 import threading
@@ -23,6 +24,7 @@ class Debouncer:
         self._lock = threading.Lock()
 
     def schedule(self, key: str, callback: Callable[[], None]) -> None:
+        # 같은 key로 대기 중인 타이머가 있으면 취소하고 새로 등록한다.
         with self._lock:
             existing = self._timers.pop(key, None)
             if existing is not None:

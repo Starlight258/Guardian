@@ -1,3 +1,4 @@
+# 세션 체크포인트 저장: 요약을 소스로 upsert하고 그래프를 업데이트한다.
 from __future__ import annotations
 
 from dataclasses import dataclass, field

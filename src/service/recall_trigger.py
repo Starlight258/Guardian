@@ -1,3 +1,4 @@
+# Recall 트리거: 짧은 프롬프트를 필터링하고 RecallAgent에 전달한다.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -62,6 +63,7 @@ def trigger_recall_from_prompt(
 
 
 def dispatch_recall(
+    # recall_agent가 없으면(시작 미완료 등) 아무것도 하지 않는다.
     context: PromptContext,
     *,
     db: Session | None = None,

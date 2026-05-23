@@ -1,3 +1,4 @@
+# 그래프 라우터: 대시보드용 /nodes, /edges, /stats 엔드포인트.
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,6 +22,7 @@ DBSession = Depends(get_db)
 
 
 def _node_label(*, source_title: str | None, source_path: str | None, chunk_id: str) -> str:
+    # 우선순위: title > path stem > chunk_id 앞 8자.
     if source_title:
         return source_title
     if source_path:

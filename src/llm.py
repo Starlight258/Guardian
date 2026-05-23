@@ -1,3 +1,4 @@
+# LLM 클라이언트: Anthropic, Ollama(로컬), 서킷 브레이커 래퍼.
 from __future__ import annotations
 
 import json
@@ -22,7 +23,7 @@ OLLAMA_BASE_URL = "http://localhost:11434/v1"
 
 
 class CircuitBreaker:
-    """CLOSED → OPEN(3 consecutive failures) → HALF_OPEN(60s) → CLOSED(probe success)."""
+    # CLOSED → OPEN(3회 연속 실패) → HALF_OPEN(60초 후) → CLOSED(프로브 성공)
 
     def __init__(
         self,
@@ -156,7 +157,7 @@ class LocalLLMClient:
 
 
 class ResilientLLMClient:
-    """AnthropicLLMClient with Circuit Breaker; falls back to LocalLLMClient when OPEN."""
+    # Anthropic + 서킷 브레이커. OPEN 상태면 LocalLLMClient로 전환한다.
 
     def __init__(
         self,
@@ -199,6 +200,7 @@ class ResilientLLMClient:
 
 
 def _is_retryable(exc: Exception) -> bool:
+    # 5xx, 연결 오류, 타임아웃만 폴백 트리거. 4xx(인증, 할당량 초과)는 그대로 raise한다.
     try:
         import anthropic
 
@@ -212,6 +214,7 @@ def _is_retryable(exc: Exception) -> bool:
 
 
 def _to_anthropic_tool(schema: dict[str, Any]) -> dict[str, Any]:
+    # OpenAI 함수 스키마를 Anthropic tool 형식으로 변환한다.
     if "function" in schema:
         fn = schema["function"]
         return {
@@ -223,7 +226,7 @@ def _to_anthropic_tool(schema: dict[str, Any]) -> dict[str, Any]:
 
 
 def make_llm_client() -> Any:
-    """Return ResilientLLMClient (Anthropic + Circuit Breaker + Ollama) or LocalLLMClient."""
+    # GUARDIAN_LLM_PROVIDER=local이면 LocalLLMClient, 기본은 ResilientLLMClient를 반환한다.
     provider = os.getenv("GUARDIAN_LLM_PROVIDER", "anthropic")
     if provider == "local":
         return LocalLLMClient()

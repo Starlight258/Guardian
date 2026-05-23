@@ -1,3 +1,4 @@
+# SQLAlchemy 엔진, 세션 팩토리, 선언형 베이스 클래스를 정의한다.
 from __future__ import annotations
 
 from collections.abc import Generator

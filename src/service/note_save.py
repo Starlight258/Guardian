@@ -1,3 +1,4 @@
+# Obsidian 노트 저장: 워처가 호출하는 upsert, delete, move 핸들러.
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,6 +30,7 @@ def save_obsidian_note(
             graph_service.connect_chunks(session, change.chunks)
         session.commit()
     except Exception:
+        # 실패 시 DB를 롤백하고 인메모리 그래프를 재구성해 일관성을 유지한다.
         session.rollback()
         if graph_service is not None and change.changed:
             graph_service.delete_chunks([chunk.id for chunk in change.chunks])

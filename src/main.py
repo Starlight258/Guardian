@@ -1,3 +1,4 @@
+# FastAPI 앱 진입점: 시작 시 그래프, Recall Agent, Obsidian 워처를 초기화한다.
 from __future__ import annotations
 
 import asyncio

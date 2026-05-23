@@ -1,3 +1,4 @@
+# 임베딩(BAAI/bge-m3)과 Chroma 벡터 스토어로 청크 유사도 검색을 제공한다.
 from __future__ import annotations
 
 import os
@@ -25,6 +26,7 @@ class SentenceTransformerEmbedder(Embedder):
         self._model = None
 
     def embed(self, text: str) -> list[float]:
+        # 시작 지연을 막기 위해 첫 호출 시 모델을 로드한다.
         if self._model is None:
             from sentence_transformers import SentenceTransformer
 

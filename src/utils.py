@@ -1,3 +1,4 @@
+# 공통 유틸리티: 해싱, 토큰 수 계산, Obsidian 경로 파싱.
 from __future__ import annotations
 
 import hashlib

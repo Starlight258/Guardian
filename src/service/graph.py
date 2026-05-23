@@ -1,3 +1,4 @@
+# 그래프 서비스: 청크와 유사도 엣지로 NetworkX 그래프를 구성한다.
 from __future__ import annotations
 
 import os
@@ -57,6 +58,7 @@ class GraphService:
         self.graph = graph
 
     def connect_chunks(self, session: Session, chunks: Iterable[Chunk]) -> None:
+        # 청크를 임베딩하고 top-K 이웃을 찾아 threshold 이상인 엣지를 upsert한다.
         for chunk in chunks:
             embedding = self.embedder.embed(chunk.text)
             candidates = self.vector_store.query_similar(embedding, limit=self.top_k)

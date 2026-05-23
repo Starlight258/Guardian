@@ -1,3 +1,4 @@
+# 이벤트 라우터: /prompt, /session-checkpoint 엔드포인트.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -18,6 +19,7 @@ DBSession = Depends(get_db)
 
 
 def _extract_prompt(event: PromptEventRequest) -> str:
+    # hook 페이로드 형태가 다양해 여러 필드명을 순서대로 시도한다.
     for value in (event.prompt, event.user_prompt, event.message, event.text):
         if value and value.strip():
             return value.strip()
