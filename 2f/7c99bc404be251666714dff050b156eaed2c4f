@@ -1,0 +1,24 @@
+README.md
+  s_ec3b8d4846fe14::t_7212a43cd35a5b 57-60
+pyproject.toml
+  s_ec3b8d4846fe14::t_cb817eabc0e5d6 39-41
+  s_ec3b8d4846fe14::t_33913c98eb69a4 1-7
+.mcp.json
+  s_ec3b8d4846fe14::t_6c5ab2f71a046b 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "2f7c99bc404be251666714dff050b156eaed2c4f",
+  "prompts": {},
+  "sessions": {
+    "s_ec3b8d4846fe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b078cb7-278e-446b-aae2-28f1f3b4c688",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
