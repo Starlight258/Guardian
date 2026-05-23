@@ -56,8 +56,10 @@ def extract_summary(transcript_path: str) -> str:
             except json.JSONDecodeError:
                 continue
 
-            role = obj.get("role") or obj.get("type", "")
-            content = obj.get("content", "")
+            # Claude Code transcript: content is nested under "message" key
+            msg = obj.get("message") or obj
+            role = msg.get("role") or obj.get("type", "")
+            content = msg.get("content", "")
 
             if role in ("user", "human"):
                 text = _extract_text(content)

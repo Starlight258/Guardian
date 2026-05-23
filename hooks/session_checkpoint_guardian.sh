@@ -63,4 +63,5 @@ curl -fsS \
   -H "Content-Type: application/json" \
   -X POST \
   --data "$payload" \
-  "$GUARDIAN_URL/events/session-checkpoint" >/dev/null
+  "$GUARDIAN_URL/events/session-checkpoint" >/dev/null 2>&1 &
+disown
