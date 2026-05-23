@@ -1,3 +1,4 @@
+# Recall Agent: GraphRAG로 유사 청크를 검색하고 LLM을 호출해 Angel 메시지를 생성한다.
 from __future__ import annotations
 
 import json
@@ -76,7 +77,7 @@ class RecallLLMClient(Protocol):
 
 
 class HeuristicRecallLLMClient:
-    """Fallback client that mirrors the tool-use payload shape expected from Claude."""
+    # LLM 없이 Claude의 tool-use 응답 형태를 흉내 내는 폴백 클라이언트.
 
     def complete(
         self,
@@ -181,6 +182,7 @@ def _extract_recall_context(
 
 
 def _extract_tool_output(response: Any) -> RecallToolOutput | None:
+    # Anthropic SDK 객체와 dict(로컬 LLM / 휴리스틱 클라이언트) 두 형태를 모두 처리한다.
     if response is None:
         return None
 
@@ -396,6 +398,8 @@ class RecallAgent:
         session: Session,
         context: RecallContext,
     ) -> list[RecallEvidence]:
+        # 벡터 검색으로 직접 매칭을 찾고, 그래프 이웃으로 컨텍스트를
+        # MAX_EVIDENCE_ITEMS까지 확장한다.
         embedding = self.graph_service.embedder.embed(context.text)
         candidates = self.graph_service.vector_store.query_similar(embedding, limit=self.top_k)
 

@@ -12,5 +12,6 @@ def reindex_status(request: Request) -> dict:
         "running": state.running,
         "total": state.total,
         "done": state.done,
+        "skipped": state.skipped,
         "errors": state.errors,
     }

@@ -45,6 +45,7 @@ def upsert_obsidian_note_source(
         )
     )
 
+    file_mtime = path.stat().st_mtime
     content_hash = hash_text(content)
     if source is None:
         source = Source(
@@ -54,10 +55,12 @@ def upsert_obsidian_note_source(
             path=normalized_path,
             metadata_json={},
             content_hash=content_hash,
+            file_mtime=file_mtime,
         )
         session.add(source)
         session.flush()
     else:
+        source.file_mtime = file_mtime
         if source.content_hash == content_hash:
             return SourceChunkChange(
                 source=source,
