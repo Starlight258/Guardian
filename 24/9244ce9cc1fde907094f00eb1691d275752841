@@ -1,0 +1,24 @@
+hooks/transcript_summary.py
+  s_39a1881d697715::t_6c047193f6ec19 59-62
+hooks/session_checkpoint_guardian.sh
+  s_39a1881d697715::t_3ffb727283b321 66-67
+hooks/codex_summary.py
+  s_39a1881d697715::t_82f82f07486b49 2,50,61-62,64,66
+  s_39a1881d697715::t_1a0f50f7430dda 1,3-49,51-60,63,65,67-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "249244ce9cc1fde907094f00eb1691d275752841",
+  "prompts": {},
+  "sessions": {
+    "s_39a1881d697715": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74dc3c8c-c342-44da-9f6a-acc43c355b5d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
