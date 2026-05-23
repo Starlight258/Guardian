@@ -1,0 +1,19 @@
+docker-compose.yml
+  s_ec3b8d4846fe14::t_dd7f0ee7c8a0c4 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "4bc58d5b7227f88a0b8799f0ad5c061ef05a6f40",
+  "prompts": {},
+  "sessions": {
+    "s_ec3b8d4846fe14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b078cb7-278e-446b-aae2-28f1f3b4c688",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
