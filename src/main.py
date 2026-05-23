@@ -9,6 +9,7 @@ from src.api.events import router as events_router
 from src.api.graph import router as graph_router
 from src.api.recall import router as recall_router
 from src.db import SessionLocal
+from src.llm import make_llm_client
 from src.service.graph import GraphService
 from src.service.recall import RecallAgent
 from src.service.watcher import create_watchers_from_env
@@ -22,7 +23,7 @@ async def lifespan(app: FastAPI):
     with SessionLocal() as session:
         graph_service.reconstruct(session)
     app.state.graph_service = graph_service
-    app.state.recall_agent = RecallAgent(graph_service=graph_service)
+    app.state.recall_agent = RecallAgent(graph_service=graph_service, llm_client=make_llm_client())
 
     watchers = create_watchers_from_env(graph_service=graph_service)
     for watcher in watchers:

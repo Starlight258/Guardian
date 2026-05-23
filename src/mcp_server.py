@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
 from src.db import SessionLocal
+from src.llm import make_llm_client
 from src.service.graph import GraphService
 from src.service.recall import RecallAgent, RecallResult
 
@@ -52,7 +53,7 @@ def _get_runtime() -> MCPRuntime:
         graph_service.reconstruct(session)
     return MCPRuntime(
         graph_service=graph_service,
-        recall_agent=RecallAgent(graph_service=graph_service),
+        recall_agent=RecallAgent(graph_service=graph_service, llm_client=make_llm_client()),
     )
 
 
