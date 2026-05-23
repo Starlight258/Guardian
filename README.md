@@ -56,7 +56,19 @@ Docker 사용 여부와 관계없이 로컬에서 따로 실행해요. Claude Co
 
 프로젝트 루트의 `.mcp.json`에 이미 등록돼 있어요. Claude Code에서 이 프로젝트를 열면 자동으로 인식해요.
 
-### 3. Claude Code Hooks
+### 3. Ollama (선택사항)
+
+Anthropic API 장애 시 Circuit Breaker가 자동으로 Ollama로 전환해요. 평소엔 없어도 되지만, 설치해두면 API 장애 중에도 Recall이 동작해요.
+
+macOS에서는 Docker 대신 로컬 설치를 권장해요 — Docker는 Apple Silicon GPU(Metal)를 사용할 수 없어서 속도 차이가 커요.
+
+```bash
+brew install ollama
+ollama serve
+ollama pull qwen2.5:7b
+```
+
+### 4. Claude Code Hooks
 
 세션 체크포인트 자동 저장과 Recall 트리거를 활성화하려면 `.claude/settings.json`에 등록해요.
 
