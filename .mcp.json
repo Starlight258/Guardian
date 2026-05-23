@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "guardian": {
+      "command": "uv",
+      "args": ["run", "guardian-mcp"],
+      "cwd": "/Users/mae/Desktop/Develop/Guardian"
+    }
+  }
+}

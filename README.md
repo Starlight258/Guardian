@@ -54,6 +54,10 @@ docker compose up --build
 
 Docker 사용 여부와 관계없이 로컬에서 따로 실행해요. Claude Code가 직접 프로세스를 띄우는 방식이라 컨테이너 안에 넣을 수 없어요.
 
+프로젝트 루트의 `.mcp.json`에 이미 등록돼 있어요. Claude Code에서 이 프로젝트를 열면 자동으로 인식해요.
+
+수동으로 실행할 때:
+
 ```bash
 uv run guardian-mcp
 ```
