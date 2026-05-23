@@ -64,8 +64,8 @@ macOS에서는 Docker 대신 로컬 설치를 권장해요 — Docker는 Apple S
 
 ```bash
 brew install ollama
-ollama serve
 ollama pull qwen2.5:7b
+ollama serve
 ```
 
 ### 4. Claude Code Hooks
