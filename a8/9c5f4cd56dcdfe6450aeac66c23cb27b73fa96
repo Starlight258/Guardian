@@ -1,0 +1,32 @@
+src/mcp_server.py
+  s_97a69406bf1b41::t_c6cad9ce34ae62 56
+  s_97a69406bf1b41::t_9b7a94f02aa309 11
+src/main.py
+  s_97a69406bf1b41::t_ed1500580b3fdb 12
+  s_97a69406bf1b41::t_79c71f00a5a5b1 26
+tests/test_llm.py
+  s_97a69406bf1b41::t_5420248b5de876 1-85,87-139,141-237
+  s_97a69406bf1b41::t_fc3969fe46f0fd 140
+  s_97a69406bf1b41::t_530ab6a520dedf 86
+pyproject.toml
+  s_97a69406bf1b41::t_9bdbfce996e4d4 9,13
+src/llm.py
+  s_97a69406bf1b41::t_ff2bcce8b40650 1-225,227-234
+  s_97a69406bf1b41::t_eb3905ef54312a 226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "a89c5f4cd56dcdfe6450aeac66c23cb27b73fa96",
+  "prompts": {},
+  "sessions": {
+    "s_97a69406bf1b41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36f42e33-5fb9-4874-b7f1-85e19a5d4957",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
