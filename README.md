@@ -20,7 +20,12 @@ AI와 작업하다 보면 비슷한 질문을 반복하게 돼요. 예전에 정
 
 Guardian은 Obsidian 노트와 session checkpoint를 자동으로 수집하고, 의미 기반으로 연결해서 하나의 그래프로 정리해줘요. Claude Code prompt event가 들어오면 현재 작업과 비슷한 과거 맥락을 찾아 Angel이 짧은 메시지를 띄워요.
 
-MVP는 개인 AI 학습 흐름의 기억 보조 레이어에 집중해요.
+현재는 Capture, Connect, Recall의 핵심 경로가 동작해요.
+
+- Obsidian 노트와 session checkpoint를 자동 수집해요.
+- Chroma + NetworkX로 관련 맥락을 검색하고 연결해요.
+- `POST /recall`로 Recall Agent를 호출하고, `recall_logs`에 결과를 저장해요.
+- `guardian-mcp` FastMCP 서버로 Claude Code 쪽 recall tool을 노출해요.
 
 ---
 
@@ -52,7 +57,15 @@ npm run dev
 
 Dashboard: http://127.0.0.1:5173
 
-### 3. Claude Code Hooks
+### 3. MCP Server
+
+```bash
+uv run guardian-mcp
+```
+
+Claude Code용 `recall` tool을 stdio MCP 서버로 띄워요.
+
+### 4. Claude Code Hooks
 
 세션 체크포인트 자동 저장과 Recall 트리거를 활성화하려면 `.claude/settings.json`에 등록해요.
 
@@ -86,7 +99,7 @@ Dashboard: http://127.0.0.1:5173
 ```
 
 - `SessionEnd`: 세션이 끝날 때 `transcript_summary.py`가 대화 내용을 요약하고, 그 결과를 `session_checkpoint_guardian.sh`가 Guardian에 저장해요.
-- `UserPromptSubmit`: 프롬프트를 입력할 때마다 Recall Agent를 트리거해요. `dispatch_recall` 연결 완료 후 활성화돼요.
+- `UserPromptSubmit`: 프롬프트를 입력할 때마다 Recall Agent를 트리거해요.
 - `|| true`: hook 실패 시 Claude Code 흐름을 막지 않아요.
 
 ---
@@ -122,7 +135,7 @@ flowchart LR
 | LLM Resilience | Circuit Breaker (Anthropic API 장애 시 Ollama qwen2.5:7b 자동 전환) |
 | Guardrails | Confidence scoring (threshold-based Angel trigger) |
 | Frontend | React + Vite + d3.js |
-| Claude integration | MCP Server + Hooks |
+| Claude integration | FastMCP + Hooks |
 | Evaluation | RAGAS |
 
 ---
@@ -153,12 +166,14 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 
 ## Roadmap
 
-| Week | Milestone |
+| Status | Milestone |
 |---|---|
-| 1-2 | Capture infrastructure |
-| 3-4 | Knowledge graph dashboard |
-| 5 | Recall Agent + Guardrails |
-| 6 | MCP integration |
+| Done | Capture infrastructure |
+| Done | Knowledge graph dashboard |
+| Done | Recall Agent + Guardrails |
+| Done | FastMCP recall tool |
+| Next | LLM resilience layer |
+| Next | RAGAS evaluation loop |
 
 ---
 
@@ -171,8 +186,7 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 ## Status
 
 ```text
-Status: Designing
-Implementation starts: June 2026
+Status: Core capture, recall, dashboard, and MCP recall tool implemented
 ```
 
 ---
