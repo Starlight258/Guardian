@@ -1,0 +1,19 @@
+hooks/chatgpt_guardian.user.js
+  s_dcdcc9d5269a16::t_48a8b3b8cc84db 1-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "71a17ecd3aa983fdc4cd5857aeb98dc78070062c",
+  "prompts": {},
+  "sessions": {
+    "s_dcdcc9d5269a16": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b8c40e3-2ae7-4028-bb88-9168abadc48e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
