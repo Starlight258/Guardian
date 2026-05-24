@@ -1,0 +1,21 @@
+docs/hook-flow.md
+  s_39a1881d697715::t_dca7af43b6d0ef 1-172
+README.md
+  s_39a1881d697715::t_b9eaf35a432bbe 73,77-78,89,100,110,114,118-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "6113584547777f14d3f0dcb542fedbae6d025a16",
+  "prompts": {},
+  "sessions": {
+    "s_39a1881d697715": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74dc3c8c-c342-44da-9f6a-acc43c355b5d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
