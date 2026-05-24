@@ -1,0 +1,45 @@
+hooks/codex_session_flush.py
+  s_39a1881d697715::t_16cdb9d3268c8a 33-34
+  s_39a1881d697715::t_c4ec02cf79070f 15
+src/crud/source.py
+  s_4875f5cde985cb::t_2f86e3820c7875 110-139,145-149,153
+tests/test_checkpoint.py
+  s_39a1881d697715::t_cd187552432b1e 302
+  s_39a1881d697715::t_886a92a8798e3b 235,268
+  s_4875f5cde985cb::t_1ced49e4137006 166,170-173,177,181,195
+  s_4875f5cde985cb::t_2028d860c64d3c 163,190,193
+  s_4875f5cde985cb::t_ac39461b74b07c 187,194
+hooks/codex_session_collect.py
+  s_39a1881d697715::t_7a954567a8b0e8 17
+  s_39a1881d697715::t_ac9ebe9523d618 2-3,8,12-16,20,23,34-35,37,41-80,99-117,121-123
+  s_39a1881d697715::t_9abad206b13e08 36
+hooks/claude_session_summary.py
+  s_39a1881d697715::t_9c3b0a01def9c9 74
+  s_39a1881d697715::t_b3098e63091613 14
+  s_39a1881d697715::t_d3d79880800bf3 12
+  s_39a1881d697715::t_bd3c364ac9cc92 21-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "74cb8ed4963dad72cc826220848153f461244b9b",
+  "prompts": {},
+  "sessions": {
+    "s_39a1881d697715": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74dc3c8c-c342-44da-9f6a-acc43c355b5d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    },
+    "s_4875f5cde985cb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e5491-7d2d-7313-9ab4-ccf79be30604",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
