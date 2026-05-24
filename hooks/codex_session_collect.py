@@ -73,9 +73,9 @@ def ensure_pending_file(pending_file: Path, *, session_id: str, cwd: str) -> Non
 
 
 def append_prompt_block(pending_file: Path, *, messages: list[str], latest_ts: int) -> None:
-    block = ["## Stop", ""]
+    block = []
     block.extend(f"- {message[:300]}" for message in messages[-MAX_MESSAGES:])
-    block.extend(["", f"Last prompt ts: {latest_ts}", ""])
+    block.extend(["", f"<!-- last_ts: {latest_ts} -->", ""])
     with pending_file.open("a", encoding="utf-8") as f:
         f.write("\n".join(block))
 
