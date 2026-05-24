@@ -1,0 +1,20 @@
+hooks/codex_session_collect.py
+  s_39a1881d697715::t_882eb5b80f5647 78
+  s_39a1881d697715::t_76ce0f7288fc32 76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "ae7a8863da41d219b249453c252ed8c481a73646",
+  "prompts": {},
+  "sessions": {
+    "s_39a1881d697715": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74dc3c8c-c342-44da-9f6a-acc43c355b5d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
