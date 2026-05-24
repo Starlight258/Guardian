@@ -160,32 +160,39 @@ def test_capture_session_checkpoint_creates_graph_edges_for_similar_checkpoint_c
     assert graph_service.graph.number_of_edges() >= 1
 
 
-def test_capture_session_checkpoint_dedupes_by_session_id() -> None:
+def test_capture_session_checkpoint_upserts_by_session_id() -> None:
     session_factory = make_session_factory()
     graph_service = FakeGraphService()
-    checkpoint = SessionCheckpoint(
+    first_checkpoint = SessionCheckpoint(
         session_id="session-5",
         session_summary="First summary.",
+    )
+    second_checkpoint = SessionCheckpoint(
+        session_id="session-5",
+        session_summary="Updated summary.",
     )
 
     with session_factory() as session:
         first = capture_session_checkpoint(
-            session, checkpoint=checkpoint, graph_service=graph_service
+            session, checkpoint=first_checkpoint, graph_service=graph_service
         )
     with session_factory() as session:
         second = capture_session_checkpoint(
-            session, checkpoint=checkpoint, graph_service=graph_service
+            session, checkpoint=second_checkpoint, graph_service=graph_service
         )
 
     with session_factory() as session:
         sources = list(session.scalars(select(Source)))
         chunks = list(session.scalars(select(Chunk)))
+        source = sources[0]
 
     assert first.changed is True
-    assert second.changed is False
+    assert second.changed is True
     assert len(sources) == 1
     assert len(chunks) == 1
-    assert graph_service.connected_chunk_ids == [chunks[0].id]
+    assert len(graph_service.connected_chunk_ids) == 2
+    assert source.metadata_json["session_summary"] == "Updated summary."
+    assert "Updated summary." in chunks[0].text
 
 
 def test_checkpoint_event_updates_app_graph_service() -> None:
@@ -225,7 +232,7 @@ def test_session_checkpoint_hook_posts_payload_from_stdin(tmp_path: Path) -> Non
 
     try:
         subprocess.run(
-            [str(Path("hooks/session_checkpoint_guardian.sh").resolve())],
+            [str(Path("hooks/post_session_to_guardian.sh").resolve())],
             cwd=tmp_path,
             input=json.dumps(
                 {
@@ -258,7 +265,7 @@ def test_session_checkpoint_hook_wraps_raw_text_payload(tmp_path: Path) -> None:
 
     try:
         subprocess.run(
-            [str(Path("hooks/session_checkpoint_guardian.sh").resolve())],
+            [str(Path("hooks/post_session_to_guardian.sh").resolve())],
             cwd=tmp_path,
             input="Rule-based checkpoint summary from session end.",
             text=True,
@@ -292,7 +299,7 @@ def _run_transcript_summary(transcript_path: Path) -> dict | None:
         "cwd": "/tmp",
     })
     result = subprocess.run(
-        [sys.executable, str(Path("hooks/transcript_summary.py").resolve())],
+        [sys.executable, str(Path("hooks/claude_session_summary.py").resolve())],
         input=hook_input,
         text=True,
         capture_output=True,

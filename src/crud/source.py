@@ -99,14 +99,6 @@ def upsert_session_checkpoint_source(
             Source.session_id == session_id,
         )
     )
-    if source is not None:
-        return SourceChunkChange(
-            source=source,
-            chunks=[],
-            deleted_chunk_ids=[],
-            changed=False,
-        )
-
     content = render_session_checkpoint_content(
         session_id=session_id,
         session_summary=session_summary,
@@ -115,28 +107,50 @@ def upsert_session_checkpoint_source(
     stored_metadata = dict(metadata_json or {})
     stored_metadata["session_id"] = session_id
     stored_metadata["session_summary"] = session_summary
-    source = Source(
-        id=str(uuid4()),
-        source_type=SESSION_CHECKPOINT_SOURCE_TYPE,
-        title=f"Session checkpoint {session_id[:12]}",
-        path=None,
-        session_id=session_id,
-        commit_sha=None,
-        metadata_json=stored_metadata,
-        content_hash=content_hash,
-    )
-    session.add(source)
-    session.flush()
+
+    if source is None:
+        source = Source(
+            id=str(uuid4()),
+            source_type=SESSION_CHECKPOINT_SOURCE_TYPE,
+            title=f"Session checkpoint {session_id[:12]}",
+            path=None,
+            session_id=session_id,
+            commit_sha=None,
+            metadata_json=stored_metadata,
+            content_hash=content_hash,
+        )
+        session.add(source)
+        session.flush()
+    else:
+        if (
+            source.content_hash == content_hash
+            and source.metadata_json == stored_metadata
+            and source.title == f"Session checkpoint {session_id[:12]}"
+        ):
+            return SourceChunkChange(
+                source=source,
+                chunks=[],
+                deleted_chunk_ids=[],
+                changed=False,
+            )
+
+        source.title = f"Session checkpoint {session_id[:12]}"
+        source.metadata_json = stored_metadata
+        source.content_hash = content_hash
 
     chunks = _build_chunks(
         source_id=source.id,
         texts=split_session_checkpoint_content(content),
     )
-    session.add_all(chunks)
+    deleted_chunk_ids = replace_source_chunks(
+        session,
+        source_id=source.id,
+        chunks=chunks,
+    )
     return SourceChunkChange(
         source=source,
         chunks=chunks,
-        deleted_chunk_ids=[],
+        deleted_chunk_ids=deleted_chunk_ids,
         changed=True,
     )
 

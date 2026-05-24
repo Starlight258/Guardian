@@ -9,12 +9,20 @@ from pathlib import Path
 _WRITE_TOOLS = {"Bash", "Edit", "Write", "NotebookEdit"}
 _QUESTION_MARKERS = {"?", "왜", "고민", "생각"}
 _MAX_MSG_LEN = 300
-_MAX_USER_MSGS = 5
+_MAX_USER_MSGS = 20
 _MAX_TOOL_CALLS = 10
+_MIN_MSG_LEN = 4
 
 
 def _is_question(text: str) -> bool:
     return any(marker in text for marker in _QUESTION_MARKERS)
+
+
+_NOISE_PREFIXES = ("<", "[Request interrupted", "<local-command", "<task-notification", "<command-")
+
+
+def _is_noise(text: str) -> bool:
+    return any(text.startswith(p) for p in _NOISE_PREFIXES)
 
 
 def _extract_text(content: object) -> str:
@@ -63,7 +71,7 @@ def extract_summary(transcript_path: str) -> str:
 
             if role in ("user", "human"):
                 text = _extract_text(content)
-                if text:
+                if text and len(text) >= _MIN_MSG_LEN and not _is_noise(text):
                     user_msgs.append(text[:_MAX_MSG_LEN])
 
             elif role == "assistant":
