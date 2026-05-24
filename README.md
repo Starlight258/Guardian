@@ -70,12 +70,12 @@ ollama serve
 
 #### Claude Code
 
-`.claude/settings.json`에 추가해요.
+`~/.claude/settings.json` (전역 설정)에 추가해요.
 
 | Event | What it does |
 |---|---|
-| `SessionEnd` | 세션 종료 시 대화를 요약해 Guardian에 저장해요. |
-| `UserPromptSubmit` | 프롬프트를 입력할 때마다 Recall Agent를 트리거해요. |
+| `SessionEnd` | 트랜스크립트를 파싱해 요약 후 Guardian에 저장해요. |
+| `UserPromptSubmit` | 프롬프트 입력마다 Recall Agent를 트리거해요. |
 
 ```json
 {
@@ -86,7 +86,7 @@ ollama serve
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./hooks/transcript_summary.py | ./hooks/session_checkpoint_guardian.sh || true"
+            "command": "python3 /path/to/hooks/claude_session_summary.py | /path/to/hooks/post_session_to_guardian.sh || true"
           }
         ]
       }
@@ -97,7 +97,7 @@ ollama serve
         "hooks": [
           {
             "type": "command",
-            "command": "cat | ./hooks/guardian_hook.sh || true"
+            "command": "cat | /path/to/hooks/recall_trigger.sh || true"
           }
         ]
       }
@@ -107,25 +107,29 @@ ollama serve
 ```
 
 - `|| true`: hook 실패 시 Claude Code 흐름을 막지 않아요.
+- `claude_session_summary.py`: 트랜스크립트 JSONL에서 Questions / Requests / Actions 섹션을 추출해요.
 
 #### Codex
 
-`.codex/config.toml`에서 hooks 기능을 켜고, `.codex/hooks.json`에 훅을 넣어요.
-
-```toml
-[features]
-hooks = true
-```
+`~/.codex/config.toml`에 추가해요. Codex는 `SessionEnd`가 없어서 Stop → SessionStart 2단계 파이프라인을 사용해요.
 
 | Event | What it does |
 |---|---|
-| `SessionStart` | 시작 시 workspace 컨텍스트를 불러와요. |
-| `UserPromptSubmit` | 프롬프트가 들어올 때마다 recall trigger를 걸어요. |
-| `PostToolUse` | 도구 사용 후 결과를 후속 처리해요. |
-| `SessionEnd` | 세션 종료 시 checkpoint summary를 Guardian에 저장해요. |
-| `Stop` | 세션이 끝나기 직전에 후처리를 해요. |
+| `Stop` | 각 응답 완료 시 프롬프트를 임시 파일에 수집해요. |
+| `SessionStart` | 이전 세션의 수집 파일을 Guardian에 전송해요. |
+| `UserPromptSubmit` | 프롬프트 입력마다 Recall Agent를 트리거해요. |
 
-`.codex/hooks.json`의 실제 예시는 repo 안의 파일을 그대로 따라가면 돼요. `Entire CLI`가 없으면 훅은 조용히 건너뛰어요.
+```toml
+[[hooks.Stop]]
+command = "python3 /path/to/hooks/codex_session_collect.py | /path/to/hooks/post_session_to_guardian.sh || true"
+
+[[hooks.SessionStart]]
+command = "python3 /path/to/hooks/codex_session_flush.py || true"
+
+[[hooks.UserPromptSubmit]]
+command = "cat | /path/to/hooks/recall_trigger.sh || true"
+```
+
 
 ---
 
