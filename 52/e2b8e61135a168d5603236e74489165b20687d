@@ -1,0 +1,20 @@
+src/service/recall.py
+  s_a2615bc2139046::t_3d5ddb3b09dc5d 166,171-172
+  s_a2615bc2139046::t_5597a3a53137fb 550-551
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "52e2b8e61135a168d5603236e74489165b20687d",
+  "prompts": {},
+  "sessions": {
+    "s_a2615bc2139046": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "40176ebf-3385-48be-99ea-1f68c7c30d89",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
