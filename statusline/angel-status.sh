@@ -85,7 +85,7 @@ BUBBLE_LINES+=("│ ${E}$(printf '%*s' $EPAD '') │"); BUBBLE_TYPES+=("emote")
 if [ "$SHOW_MSG" -eq 1 ]; then
     BUBBLE_LINES+=("│$(printf '%*s' $(( BUBBLE_W - 2 )) '')│"); BUBBLE_TYPES+=("blank")
 
-    msg="\"${MESSAGE}\""
+    msg="${MESSAGE}"
     C1="${msg:0:$B_INNER}"
     C1PAD=$(( B_INNER - ${#C1} )); [ "$C1PAD" -lt 0 ] && C1PAD=0
     BUBBLE_LINES+=("│ ${C1}$(printf '%*s' $C1PAD '') │"); BUBBLE_TYPES+=("msg")
