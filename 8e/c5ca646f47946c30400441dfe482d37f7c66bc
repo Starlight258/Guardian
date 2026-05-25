@@ -1,0 +1,19 @@
+statusline/angel-template.md
+  s_5c2e98862520bf::t_5f4da6fd0b6890 12-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "8ec5ca646f47946c30400441dfe482d37f7c66bc",
+  "prompts": {},
+  "sessions": {
+    "s_5c2e98862520bf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b02d5ae-56e4-476f-bb58-a0b301ede436",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
