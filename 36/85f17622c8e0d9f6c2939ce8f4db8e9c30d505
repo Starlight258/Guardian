@@ -1,0 +1,19 @@
+statusline/angel-moods.sh
+  s_5c2e98862520bf::t_0e6386ef1ba799 7,18-23,26-28,30-31,37,39-44,52-55,57,59,65,70,72,79,84,86,92-93,95,97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "3685f17622c8e0d9f6c2939ce8f4db8e9c30d505",
+  "prompts": {},
+  "sessions": {
+    "s_5c2e98862520bf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b02d5ae-56e4-476f-bb58-a0b301ede436",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
