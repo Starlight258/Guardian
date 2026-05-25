@@ -1,0 +1,27 @@
+statusline/angel-moods.sh
+  s_a2615bc2139046::t_50c939225056af 89
+  s_a2615bc2139046::t_b91aee3bef8e47 40-43,64,80,82,92,94
+  s_a2615bc2139046::t_c80558a8002a84 46,77,90
+  s_a2615bc2139046::t_30dd72fadc8c9b 9,19,54,70
+  s_a2615bc2139046::t_0f1401009abe17 76
+  s_a2615bc2139046::t_37c4c6aae1bcfc 45
+  s_a2615bc2139046::t_8cfef89d8bda76 39
+statusline/angel-status.sh
+  s_a2615bc2139046::t_b88db5c34eb0c8 166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "9afd43f16418b5725405e3ef3cc646b72e5f806c",
+  "prompts": {},
+  "sessions": {
+    "s_a2615bc2139046": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "40176ebf-3385-48be-99ea-1f68c7c30d89",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
