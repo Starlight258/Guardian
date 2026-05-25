@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Protocol
 
 from sqlalchemy.orm import Session
@@ -10,6 +12,46 @@ from sqlalchemy.orm import Session
 from src.models import Chunk, RecallLog
 from src.service.graph import GraphService
 from src.utils import hash_text
+
+_ANGEL_STATE_PATH = Path.home() / ".guardian" / "angel-state.json"
+
+
+def _write_angel_state(
+    message: str,
+    *,
+    evidence: "list[RecallEvidence] | None" = None,
+    recall_count: int = 0,
+) -> None:
+    """Write Angel's recall result to the status line state file. Silently no-ops on failure."""
+    try:
+        _ANGEL_STATE_PATH.parent.mkdir(exist_ok=True)
+        existing: dict = {}
+        if _ANGEL_STATE_PATH.exists():
+            try:
+                existing = json.loads(_ANGEL_STATE_PATH.read_text())
+            except Exception:
+                pass
+
+        source_title = None
+        source_file = None
+        if evidence:
+            first = evidence[0]
+            source_title = first.title
+            source_file = Path(first.path).name if first.path else None
+
+        existing.update({
+            "message": message,
+            "message_ts": int(time.time()),
+            "mood": "excited" if existing.get("mood") not in ("tired",) else "tired",
+            "source_title": source_title,
+            "source_file": source_file,
+            "recall_count": (existing.get("recall_count") or 0) + 1,
+            "last_recall_ts": int(time.time()),
+        })
+        _ANGEL_STATE_PATH.write_text(json.dumps(existing, ensure_ascii=False))
+    except Exception:
+        pass
+
 
 RECALL_TOP_K = 5
 RECALL_RELEVANCE_THRESHOLD = 0.7
@@ -380,6 +422,11 @@ class RecallAgent:
                 angel_message=None,
             )
 
+        _write_angel_state(
+            final_message,
+            evidence=retrieved_evidence,
+            recall_count=len(chunk_ids),
+        )
         return self._save_result(
             session,
             input_hash=input_hash,
