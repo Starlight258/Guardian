@@ -1,0 +1,38 @@
+src/service/recall.py
+  s_5c2e98862520bf::t_48c72b5cc00c70 425-429
+  s_5c2e98862520bf::t_5c15bcc6a658af 16-18,26-33,42-45,50-55
+  s_5c2e98862520bf::t_c9e85f775654df 5,7
+  s_5c2e98862520bf::t_8deffcd28f2472 19-25,34-41,46-49
+statusline/angel-moods.sh
+  s_5c2e98862520bf::t_302f1fce6150e8 1-100
+statusline/angel-status.sh
+  s_5c2e98862520bf::t_74a11a572dc481 4,12,41,71-75,79,81-82,85-99,101,103-107,110,112-114,117,119-121,123,126-140,142-144,146-166,168,170-187,193,200,203-210
+  s_5c2e98862520bf::t_be82f929204819 68
+  s_5c2e98862520bf::t_ce6e6f4d11a8df 202
+  s_5c2e98862520bf::t_3fab2a8c8400ac 116
+  s_5c2e98862520bf::t_027103d902553b 62-67,118
+  s_5c2e98862520bf::t_db7ce1e2cb8efe 1,15-25,31-33,36-37,39-40,53,55,59,76,80,83-84,100,102,192,194,199,211-212
+  s_5c2e98862520bf::t_6556e310e1d3b8 5-11,195-198
+  s_5c2e98862520bf::t_52072a29dd382b 125
+  s_5c2e98862520bf::t_57ee84cad18f0e 2-3,13-14,26-30,34-35,38,42-52,54,56-58,60-61,77-78,108-109,111,115,122,124,145,167,169,188-191,201
+  s_5c2e98862520bf::t_f0c08dc7db2166 69-70
+  s_5c2e98862520bf::t_a094f48e28e283 141
+hooks/angel_post_tool.py
+  s_5c2e98862520bf::t_ace38340326b00 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "dfe1cd0d24c7bf478a328a3c7c004fca8872bfac",
+  "prompts": {},
+  "sessions": {
+    "s_5c2e98862520bf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b02d5ae-56e4-476f-bb58-a0b301ede436",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
