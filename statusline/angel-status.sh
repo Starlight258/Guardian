@@ -136,41 +136,7 @@ MAX_LINES=$(( BUBBLE_COUNT > ART_COUNT ? BUBBLE_COUNT : ART_COUNT ))
 
 CONNECTOR_BI=$(( BUBBLE_COUNT / 2 ))
 
-# ─── 3-column status bar (top — above the art) ───────────────────────────────
-_vis_len() { printf '%s' "$1" | sed 's/\x1b\[[0-9;:]*[mK]//g' | wc -m | tr -d ' '; }
-
-[ "$GUARDIAN_ACTIVE" = "true" ] && \
-    COL1_L1="${GREEN}□${NC} ${PURPLE}Guardian is listening...${NC} ${GOLD}✨${NC}" || \
-    COL1_L1="${GRAY}□ Guardian offline${NC}"
-COL1_L2="  ${DIM}Capture → Connect → Recall${NC}"
-
-if [ "$RECALL_COUNT" -gt 0 ] 2>/dev/null; then
-    [ "$RECALL_COUNT" -eq 1 ] && MEM_WORD="memory" || MEM_WORD="memories"
-    COL2_L1="${GRAY}◈${NC} ${PURPLE}${RECALL_COUNT} related ${MEM_WORD} found${NC}"
-    COL2_L2="${DIM}  last recall: ${LAST_RECALL_STR}${NC}"
-else
-    COL2_L1="${GRAY}◈ no recalls yet${NC}"
-    COL2_L2=""
-fi
-
-case "$MOOD" in
-    happy)   EXTRA="${GOLD}✨${NC}" ;;
-    excited) EXTRA="${GOLD}✨${NC} ${PINK}🩷${NC}" ;;
-    tired)   EXTRA="${GRAY}·${NC}" ;;
-    *)       EXTRA="${PINK}🩷${NC}" ;;
-esac
-COL3_L1="${GREEN}●${NC} ${PURPLE}Angel: ON${NC}  👼 ${EXTRA}"
-
-COL_W=$(( COLS / 3 ))
-C1P=$(( COL_W - $(_vis_len "$COL1_L1") )); [ "$C1P" -lt 3 ] && C1P=3
-C2P=$(( COL_W - $(_vis_len "$COL2_L1") )); [ "$C2P" -lt 3 ] && C2P=3
-printf '%s%*s%s%*s%s\n' "$COL1_L1" "$C1P" '' "$COL2_L1" "$C2P" '' "$COL3_L1"
-
-C1L2P=$(( COL_W - $(_vis_len "$COL1_L2") )); [ "$C1L2P" -lt 3 ] && C1L2P=3
-C2L2P=$(( COL_W - $(_vis_len "$COL2_L2") )); [ "$C2L2P" -lt 3 ] && C2L2P=3
-printf '%s%*s%s\n' "$COL1_L2" "$C1L2P" '' "$COL2_L2"
-
-# ─── Render bubble + art (bottom — closest to input) ─────────────────────────
+# ─── Render bubble + art ─────────────────────────────────────────────────────
 for (( i=0; i<MAX_LINES; i++ )); do
     ai=$(( i - ART_START ))
     if [ $ai -ge 0 ] && [ $ai -lt $ART_COUNT ]; then
