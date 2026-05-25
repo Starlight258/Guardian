@@ -163,13 +163,13 @@ class HeuristicRecallLLMClient:
 
 
 def _build_angel_message(prompt: str, evidence: list[RecallEvidence]) -> str:
+    del prompt
     snippets = ", ".join(
         _compact_text(item.title or item.path or item.chunk_id, limit=24) for item in evidence[:2]
     )
-    prompt_preview = _compact_text(prompt, limit=60)
     if snippets:
-        return f"관련 맥락: {snippets}. 현재 작업: {prompt_preview}"
-    return f"현재 작업: {prompt_preview}"
+        return f"관련 맥락: {snippets}"
+    return "관련 컨텍스트를 찾았어요"
 
 
 def _compact_text(text: str, *, limit: int) -> str:
@@ -547,7 +547,8 @@ class RecallAgent:
                 "- chunk_ids: selected chunk ids",
                 "- evidence_sources: source ids used",
                 "- relevance_score: 0.0 to 1.0",
-                f"- angel_message: max {RECALL_ANGEL_MESSAGE_MAX_LENGTH} chars",
+                f"- angel_message: max {RECALL_ANGEL_MESSAGE_MAX_LENGTH} chars,"
+                " summarise the EVIDENCE relevance only — do NOT echo or repeat the user's input text",
             ]
         )
         return "\n".join(lines)
