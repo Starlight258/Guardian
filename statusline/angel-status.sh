@@ -105,10 +105,19 @@ if [ "$SHOW_MSG" -eq 1 ]; then
     fi
 fi
 
+# Pad bubble with blank lines inside the box to match ART height
+ART_COUNT=${#ART[@]}
+CORE_COUNT=$(( ${#BUBBLE_LINES[@]} + 1 ))   # +1 for closing border
+PAD_NEEDED=$(( ART_COUNT - CORE_COUNT ))
+if [ "$PAD_NEEDED" -gt 0 ]; then
+    BLANK_LINE="│$(printf '%*s' $(( BUBBLE_W - 2 )) '')│"
+    for (( _p=0; _p<PAD_NEEDED; _p++ )); do
+        BUBBLE_LINES+=("$BLANK_LINE"); BUBBLE_TYPES+=("blank")
+    done
+fi
 BUBBLE_LINES+=("╰${B_FILL}╯"); BUBBLE_TYPES+=("border")
 
 BUBBLE_COUNT=${#BUBBLE_LINES[@]}
-ART_COUNT=${#ART[@]}
 
 # ─── Terminal width & right-align ────────────────────────────────────────────
 COLS=$(tput cols 2>/dev/null || echo "${COLUMNS:-120}")
@@ -121,48 +130,13 @@ PAD=$(( COLS - TOTAL_W - MARGIN - CLAUDE_OFFSET ))
 [ "$PAD" -lt 0 ] && PAD=0
 SP=$(printf '%*s' "$PAD" '')
 
-# Vertically center the shorter element against the taller one
-if [ "$BUBBLE_COUNT" -lt "$ART_COUNT" ]; then
-    BUBBLE_START=$(( (ART_COUNT - BUBBLE_COUNT) / 2 ))
-    ART_START=0
-else
-    ART_START=$(( (BUBBLE_COUNT - ART_COUNT) / 2 ))
-    BUBBLE_START=0
-fi
-
-MAX_LINES=$(( (ART_START + ART_COUNT) > (BUBBLE_START + BUBBLE_COUNT) \
-    ? (ART_START + ART_COUNT) : (BUBBLE_START + BUBBLE_COUNT) ))
+ART_START=0
+BUBBLE_START=0
+MAX_LINES=$(( BUBBLE_COUNT > ART_COUNT ? BUBBLE_COUNT : ART_COUNT ))
 
 CONNECTOR_BI=$(( BUBBLE_COUNT / 2 ))
 
-# ─── Render bubble + art ─────────────────────────────────────────────────────
-for (( i=0; i<MAX_LINES; i++ )); do
-    ai=$(( i - ART_START ))
-    if [ $ai -ge 0 ] && [ $ai -lt $ART_COUNT ]; then
-        ART_COL="${ART[$ai]}${NC}"
-    else
-        ART_COL=""
-    fi
-
-    bi=$(( i - BUBBLE_START ))
-    if [ $bi -ge 0 ] && [ $bi -lt $BUBBLE_COUNT ]; then
-        bline="${BUBBLE_LINES[$bi]}"
-        btype="${BUBBLE_TYPES[$bi]}"
-        [ $bi -eq $CONNECTOR_BI ] && GAP_STR=" ${CB}─${NC} " || GAP_STR="   "
-        inner="${bline:1:$(( ${#bline} - 2 ))}"
-        case "$btype" in
-            border) printf '%s%s%s%s\n' "$SP" "${CB}${bline}${NC}"             "$GAP_STR" "$ART_COL" ;;
-            emote)  printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${PINK}${DIM}${inner}${NC}" "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
-            blank)  printf '%s%s%s%s\n' "$SP" "${CB}${bline}${NC}"             "$GAP_STR" "$ART_COL" ;;
-            msg)    printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${DIM}${inner}${NC}"       "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
-            meta)   printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${GRAY}${inner}${NC}"      "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
-        esac
-    else
-        printf '%s%s%s%s\n' "$SP" "$(printf '%*s' $BUBBLE_W '')" "   " "$ART_COL"
-    fi
-done
-
-# ─── 3-column status bar ─────────────────────────────────────────────────────
+# ─── 3-column status bar (top — above the art) ───────────────────────────────
 _vis_len() { printf '%s' "$1" | sed 's/\x1b\[[0-9;:]*[mK]//g' | wc -m | tr -d ' '; }
 
 [ "$GUARDIAN_ACTIVE" = "true" ] && \
@@ -195,5 +169,32 @@ printf '%s%*s%s%*s%s\n' "$COL1_L1" "$C1P" '' "$COL2_L1" "$C2P" '' "$COL3_L1"
 C1L2P=$(( COL_W - $(_vis_len "$COL1_L2") )); [ "$C1L2P" -lt 3 ] && C1L2P=3
 C2L2P=$(( COL_W - $(_vis_len "$COL2_L2") )); [ "$C2L2P" -lt 3 ] && C2L2P=3
 printf '%s%*s%s\n' "$COL1_L2" "$C1L2P" '' "$COL2_L2"
+
+# ─── Render bubble + art (bottom — closest to input) ─────────────────────────
+for (( i=0; i<MAX_LINES; i++ )); do
+    ai=$(( i - ART_START ))
+    if [ $ai -ge 0 ] && [ $ai -lt $ART_COUNT ]; then
+        ART_COL="${ART[$ai]}${NC}"
+    else
+        ART_COL=""
+    fi
+
+    bi=$(( i - BUBBLE_START ))
+    if [ $bi -ge 0 ] && [ $bi -lt $BUBBLE_COUNT ]; then
+        bline="${BUBBLE_LINES[$bi]}"
+        btype="${BUBBLE_TYPES[$bi]}"
+        [ $bi -eq $CONNECTOR_BI ] && GAP_STR=" ${CB}─${NC} " || GAP_STR="   "
+        inner="${bline:1:$(( ${#bline} - 2 ))}"
+        case "$btype" in
+            border) printf '%s%s%s%s\n' "$SP" "${CB}${bline}${NC}"             "$GAP_STR" "$ART_COL" ;;
+            emote)  printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${PINK}${DIM}${inner}${NC}" "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
+            blank)  printf '%s%s%s%s\n' "$SP" "${CB}${bline}${NC}"             "$GAP_STR" "$ART_COL" ;;
+            msg)    printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${DIM}${inner}${NC}"       "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
+            meta)   printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${GRAY}${inner}${NC}"      "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
+        esac
+    else
+        printf '%s%s%s%s\n' "$SP" "$(printf '%*s' $BUBBLE_W '')" "   " "$ART_COL"
+    fi
+done
 
 exit 0
