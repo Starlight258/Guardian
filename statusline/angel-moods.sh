@@ -92,7 +92,6 @@ else
     esac
 
     ART=(
-        "${NC}        ${PINK}ʚɞ${NC} ${LAVENDER}⋆｡˚ ☁︎ ˚｡⋆${NC}"
         "${NC}      ${LAVENDER}˚₊‧꒰ა${NC} ${HALO} ${LAVENDER}໒꒱ ‧₊˚${NC}"
         "${NC}           ${SKIN}/)  /)${NC}"
         "${FACE_LINE}"
