@@ -113,18 +113,10 @@ fi
 CARD_COUNT=${#CARD_LINES[@]}
 ART_COUNT=${#ART[@]}
 
-# ─── Terminal width & center-align ──────────────────────────────────────────
+# ─── Terminal width (status bar only — art uses internal spacing) ────────────
 COLS=$(tput cols 2>/dev/null || echo "${COLUMNS:-120}")
 GAP=2
-
-if [ $CARD_COUNT -gt 0 ]; then
-    TOTAL_W=$(( CARD_W + GAP + ART_W ))
-else
-    TOTAL_W=$ART_W
-fi
-PAD=$(( (COLS - TOTAL_W) / 2 ))
-[ "$PAD" -lt 0 ] && PAD=0
-SP=$(printf '%*s' "$PAD" '')
+SP=""
 
 CARD_START=0
 [ $CARD_COUNT -gt 0 ] && [ $CARD_COUNT -lt $ART_COUNT ] && \
