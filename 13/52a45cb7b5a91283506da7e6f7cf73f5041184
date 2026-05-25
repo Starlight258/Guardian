@@ -1,0 +1,22 @@
+statusline/angel-moods.sh
+  s_a2615bc2139046::t_e3b777f3b495fc 83
+  s_a2615bc2139046::t_94a23045381404 36-81,84-92
+hooks/angel_post_tool.py
+  s_a2615bc2139046::t_e0fa09c4568971 60-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "1352a45cb7b5a91283506da7e6f7cf73f5041184",
+  "prompts": {},
+  "sessions": {
+    "s_a2615bc2139046": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "40176ebf-3385-48be-99ea-1f68c7c30d89",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
