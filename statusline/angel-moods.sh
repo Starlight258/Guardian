@@ -33,67 +33,60 @@
 
 BLINK=$(( NOW % 8 ))
 
-if [ "$BLINK" -eq 0 ]; then
-    # ── Blink (compact) ───────────────────────────────────────────────────────
-    ART=(
-        "${NC}       ${PINK}ʚɞ${NC}"
-        "${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${GOLD}𓂋${NC} ${LAVENDER}໒꒱ ‧₊˚${NC}"
-        "${NC}     ${SKIN}૮(•ᴗ•)ა${NC}"
-        "${NC}     ${LAVENDER}꒰ঌ${NC} ${PINK}♡${NC} ${LAVENDER}໒꒱${NC}"
-        "${NC}         ${WHITE}╹╹${NC}"
-        "${NC}        ${LAVENDER}☁︎${NC}"
-    )
-else
-    # ── Mood-based art ────────────────────────────────────────────────────────
-    case "$MOOD" in
-        happy|excited)
-            #  ˚₊‧꒰ა ✧ ໒꒱ ‧₊˚
-            #       /)  /)
-            #  ૮(˶ᵔᗜᵔ˶)ﾉﾞა     ← 2-space lead (wide arm, -3 offset)
-            #   ꒰ঌ ♡⃝ ໒꒱
-            #          ╲╱       ← 10-space lead
-            #   ☁︎ 𓍯 ☁︎
-            HALO="${GOLD}✧${NC}"
-            FACE_LINE="${NC}  ${SKIN}૮(${GOLD}˶ᵔᗜᵔ˶)ﾉﾞ${SKIN}ა${NC}"
-            ITEM="${PINK}♡⃝${NC}"
-            FEET="${NC}          ${WHITE}╲╱${NC}"
-            DECO="${GOLD}𓍯${NC}"
-            ;;
-        tired)
-            #  ˚₊‧꒰ა ☾ ໒꒱ ‧₊˚
-            #       /)  /)
-            #   ૮( • ᴗ - )ა    ← 5-space lead
-            #    ꒰ঌ ✧ ໒꒱
-            #           ╲╱
-            #    ☁︎ ♡ ☁︎
-            HALO="${GRAY}☾${NC}"
-            FACE_LINE="${NC}     ${SKIN}૮(${GRAY} • ᴗ - ${SKIN})ა${NC}"
-            ITEM="${PINK}✧${NC}"
-            FEET="${NC}         ${WHITE}╲╱${NC}"
-            DECO="${GRAY}♡${NC}"
-            ;;
-        *)
-            # focused / default
-            #  ˚₊‧꒰ა 𓂋 ໒꒱ ‧₊˚
-            #       /)  /)
-            #   ૮(˶• ֊ •˶)ა   ← 5-space lead
-            #    ꒰ঌ ♡ ໒꒱
-            #           ╲╱
-            #    ☁︎ ⋆ ☁︎
-            HALO="${GOLD}𓂋${NC}"
-            FACE_LINE="${NC}     ${SKIN}૮(˶• ֊ •˶)ა${NC}"
-            ITEM="${PINK}♡${NC}"
-            FEET="${NC}         ${WHITE}╲╱${NC}"
-            DECO="${LAVENDER}⋆${NC}"
-            ;;
-    esac
+# ── Mood-based art ────────────────────────────────────────────────────────
+case "$MOOD" in
+    happy|excited)
+        #  ˚₊‧꒰ა ✧ ໒꒱ ‧₊˚
+        #       /)  /)
+        #  ૮(˶ᵔᗜᵔ˶)ﾉﾞა     ← 2-space lead (wide arm, -3 offset)
+        #   ꒰ঌ ♡⃝ ໒꒱
+        #          ╲╱       ← 10-space lead
+        #   ☁︎ 𓍯 ☁︎
+        HALO="${GOLD}✧${NC}"
+        FACE_LINE="${NC}  ${SKIN}૮(${GOLD}˶ᵔᗜᵔ˶)ﾉﾞ${SKIN}ა${NC}"
+        BLINK_LINE="${NC}  ${SKIN}૮(${GOLD}˶˘ᗜ˘˶)ﾉﾞ${SKIN}ა${NC}"
+        ITEM="${PINK}♡⃝${NC}"
+        FEET="${NC}          ${WHITE}╲╱${NC}"
+        DECO="${GOLD}𓍯${NC}"
+        ;;
+    tired)
+        #  ˚₊‧꒰ა ☾ ໒꒱ ‧₊˚
+        #       /)  /)
+        #   ૮( • ᴗ - )ა    ← 5-space lead
+        #    ꒰ঌ ✧ ໒꒱
+        #           ╲╱
+        #    ☁︎ ♡ ☁︎
+        HALO="${GRAY}☾${NC}"
+        FACE_LINE="${NC}     ${SKIN}૮(${GRAY} • ᴗ - ${SKIN})ა${NC}"
+        BLINK_LINE="${NC}     ${SKIN}૮(${GRAY} ˘ ᴗ ˘ ${SKIN})ა${NC}"
+        ITEM="${PINK}✧${NC}"
+        FEET="${NC}         ${WHITE}╲╱${NC}"
+        DECO="${GRAY}♡${NC}"
+        ;;
+    *)
+        # focused / default
+        #  ˚₊‧꒰ა 𓂋 ໒꒱ ‧₊˚
+        #       /)  /)
+        #   ૮(˶• ֊ •˶)ა   ← 5-space lead
+        #    ꒰ঌ ♡ ໒꒱
+        #           ╲╱
+        #    ☁︎ ⋆ ☁︎
+        HALO="${GOLD}𓂋${NC}"
+        FACE_LINE="${NC}     ${SKIN}૮(˶• ֊ •˶)ა${NC}"
+        BLINK_LINE="${NC}     ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
+        ITEM="${PINK}♡${NC}"
+        FEET="${NC}         ${WHITE}╲╱${NC}"
+        DECO="${LAVENDER}⋆${NC}"
+        ;;
+esac
 
-    ART=(
-        "${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${HALO} ${LAVENDER}໒꒱ ‧₊˚${NC}"
-        "${NC}        ${SKIN}/)  /)${NC}"
-        "${FACE_LINE}"
-        "${NC}      ${LAVENDER}꒰ঌ${NC} ${ITEM} ${LAVENDER}໒꒱${NC}"
-        "${FEET}"
-        "${NC}      ${LAVENDER}☁︎${NC} ${DECO} ${LAVENDER}☁︎${NC}"
-    )
-fi
+[ "$BLINK" -lt 2 ] && FACE_LINE="$BLINK_LINE"
+
+ART=(
+    "${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${HALO} ${LAVENDER}໒꒱ ‧₊˚${NC}"
+    "${NC}        ${SKIN}/)  /)${NC}"
+    "${FACE_LINE}"
+    "${NC}      ${LAVENDER}꒰ঌ${NC} ${ITEM} ${LAVENDER}໒꒱${NC}"
+    "${FEET}"
+    "${NC}      ${LAVENDER}☁︎${NC} ${DECO} ${LAVENDER}☁︎${NC}"
+)
