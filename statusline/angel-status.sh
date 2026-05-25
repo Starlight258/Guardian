@@ -163,4 +163,5 @@ for (( i=0; i<MAX_LINES; i++ )); do
     fi
 done
 
+printf '\n'
 exit 0
