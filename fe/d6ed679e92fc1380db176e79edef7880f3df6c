@@ -1,0 +1,19 @@
+statusline/angel-status.sh
+  s_a2615bc2139046::t_2198856c9247a6 88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "fed6ed679e92fc1380db176e79edef7880f3df6c",
+  "prompts": {},
+  "sessions": {
+    "s_a2615bc2139046": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "40176ebf-3385-48be-99ea-1f68c7c30d89",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
