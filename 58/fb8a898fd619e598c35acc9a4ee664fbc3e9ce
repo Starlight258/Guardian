@@ -1,0 +1,21 @@
+statusline/angel-status.sh
+  s_5c2e98862520bf::t_718e0a0c211a15 108,114
+  s_5c2e98862520bf::t_23a85771458522 139,173
+  s_5c2e98862520bf::t_b306631aa7ad1c 109-113,115-117,133-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "58fb8a898fd619e598c35acc9a4ee664fbc3e9ce",
+  "prompts": {},
+  "sessions": {
+    "s_5c2e98862520bf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b02d5ae-56e4-476f-bb58-a0b301ede436",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
