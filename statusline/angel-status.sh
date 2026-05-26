@@ -119,24 +119,55 @@ BUBBLE_LINES+=("│ ${E}$(printf '%*s' $EPAD '') │"); BUBBLE_TYPES+=("emote")
 if [ "$SHOW_MSG" -eq 1 ]; then
     BUBBLE_LINES+=("│$(printf '%*s' $(( BUBBLE_W - 2 )) '')│"); BUBBLE_TYPES+=("blank")
 
-    msg="${MESSAGE}"
-    C1="${msg:0:$B_INNER}"
-    C1PAD=$(( B_INNER - ${#C1} )); [ "$C1PAD" -lt 0 ] && C1PAD=0
-    BUBBLE_LINES+=("│ ${C1}$(printf '%*s' $C1PAD '') │"); BUBBLE_TYPES+=("msg")
-
-    if [ ${#msg} -gt $B_INNER ]; then
-        C2="${msg:$B_INNER:$B_INNER}"
-        C2PAD=$(( B_INNER - ${#C2} )); [ "$C2PAD" -lt 0 ] && C2PAD=0
-        BUBBLE_LINES+=("│ ${C2}$(printf '%*s' $C2PAD '') │"); BUBBLE_TYPES+=("msg")
-    fi
-
+    META=""
     if [ -n "$LAST_RECALL_STR" ]; then
         META="$LAST_RECALL_STR"
         [ -n "$SOURCE_FILE" ] && [ "$SOURCE_FILE" != "null" ] && META="${META} · ${SOURCE_FILE}"
-        M="${META:0:$B_INNER}"
-        MPAD=$(( B_INNER - ${#M} )); [ "$MPAD" -lt 0 ] && MPAD=0
-        BUBBLE_LINES+=("│ ${M}$(printf '%*s' $MPAD '') │"); BUBBLE_TYPES+=("meta")
     fi
+
+    # Python3 handles visual width of wide chars (Korean, emoji, etc.)
+    _PY_OUT=$(printf '%s\x01%s' "${MESSAGE}" "$META" | python3 -c "
+import sys, unicodedata
+
+def vcw(c):
+    return 2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1
+
+def vwrap(s, w):
+    lines = []
+    while s:
+        chunk, v = '', 0
+        for c in s:
+            cw = vcw(c)
+            if v + cw > w:
+                break
+            chunk += c; v += cw
+        if not chunk:
+            break
+        lines.append('│ ' + chunk + ' ' * (w - v) + ' │')
+        s = s[len(chunk):]
+    return lines
+
+def vtrunc(s, w):
+    chunk, v = '', 0
+    for c in s:
+        cw = vcw(c)
+        if v + cw > w: break
+        chunk += c; v += cw
+    return '│ ' + chunk + ' ' * (w - v) + ' │'
+
+B = $B_INNER
+parts = sys.stdin.read().split('\x01')
+msg  = parts[0] if len(parts) > 0 else ''
+meta = parts[1] if len(parts) > 1 else ''
+
+for line in vwrap(msg, B):
+    print('msg\t' + line)
+if meta.strip():
+    print('meta\t' + vtrunc(meta, B))
+")
+    while IFS=$'\t' read -r _type _bline; do
+        BUBBLE_LINES+=("$_bline"); BUBBLE_TYPES+=("$_type")
+    done <<< "$_PY_OUT"
 fi
 
 # Pad bubble with blank lines inside the box to match ART height
@@ -149,7 +180,7 @@ if [ "$PAD_NEEDED" -gt 0 ]; then
         BUBBLE_LINES+=("$BLANK_LINE"); BUBBLE_TYPES+=("blank")
     done
 fi
-BUBBLE_LINES+=("  ╰${B_FILL}╯"); BUBBLE_TYPES+=("border")
+BUBBLE_LINES+=("╰${B_FILL}╯"); BUBBLE_TYPES+=("border")
 
 BUBBLE_COUNT=${#BUBBLE_LINES[@]}
 
