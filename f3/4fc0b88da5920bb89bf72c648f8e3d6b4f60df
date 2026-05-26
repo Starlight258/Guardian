@@ -1,0 +1,22 @@
+hooks/angel_post_tool.py
+  s_b1eb8ec6ebee29::t_3ef3cf3b0f4bff 78
+src/service/recall.py
+  s_b1eb8ec6ebee29::t_746d851ea438fb 22
+  s_b1eb8ec6ebee29::t_4f20a2dcdf5926 551-552
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "f34fc0b88da5920bb89bf72c648f8e3d6b4f60df",
+  "prompts": {},
+  "sessions": {
+    "s_b1eb8ec6ebee29": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "985744a1-1054-491b-b1f2-563d92db95f4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
