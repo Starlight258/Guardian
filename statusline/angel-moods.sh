@@ -8,10 +8,10 @@
 #
 #       ˚₊‧꒰ა {HALO} ໒꒱‧₊˚
 #            /)  /)
-#         ૮({FACE})ა
-#          ꒰ঌ {ITEM} ໒꒱
-#             {FEET}
-#          ☁︎ {DECO} ☁︎
+#          ૮({FACE})ა
+#         ꒰ঌ {ITEM} ໒꒱
+#            {FEET}
+  #       ☁︎ {DECO} ☁︎
 #
 # Blink art (every 8 s, 6 lines):
 #
@@ -64,6 +64,21 @@ case "$MOOD" in
         ITEM="${PINK}✧${NC}"; ITEM_LEAD="      "
         FEET="${NC}         ${WHITE}╲╱${NC}"
         DECO="${GRAY}♡${NC}"; DECO_LEAD="       "
+        ;;
+    thinking)
+        #  ˚₊‧꒰ა ✦ ໒꒱‧₊˚
+        #     /)  /)
+        #   ૮(𐔌՞. .՞𐦯)ა   ← 5-space lead
+        #    ꒰ঌ ✦ ໒꒱
+        #      ╲╱
+        #    ☁︎ ⊹ ☁︎
+        HALO_LINE="${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${PURPLE}✦${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
+        EARS_LINE="${NC}        ${SKIN}/)  /)${NC}"
+        FACE_LINE="${NC}     ${SKIN}૮(𐔌՞. .՞𐦯)ა${NC}"
+        BLINK_LINE="${NC}     ${SKIN}૮(𐔌•̀ ᎑-՞𐦯)ა${NC}"
+        ITEM="${LAVENDER}✦${NC}"; ITEM_LEAD="      "
+        FEET="${NC}         ${WHITE}╲╱${NC}"
+        DECO="${PURPLE}⊹${NC}"; DECO_LEAD="      "
         ;;
     *)
         # focused / default

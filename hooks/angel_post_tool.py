@@ -8,14 +8,17 @@ Test success: "passed" in output → mood shifts to happy.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
 _STATE_PATH = Path.home() / ".guardian" / "angel-state.json"
+_DEFAULT_MOOD = os.environ.get("ANGEL_DEFAULT_MOOD", "focused")
 
-_ERROR_SIGNALS = ("Error:", "error:", "FAILED", "Traceback", "Exception", "failed")
-_PASS_SIGNALS = (" passed", "ok", "SUCCESS", "✓", "All tests")
+_ERROR_SIGNALS = ("Error:", "FAILED", "Traceback", "Exception", " failed", "exit code")
+_PASS_SIGNALS = (" passed", "SUCCESS", "✓", "All tests")
+_THINKING_TOOLS = {"Read", "Glob", "Grep", "Task", "Explore"}
 
 
 def _read_state() -> dict:
@@ -24,7 +27,7 @@ def _read_state() -> dict:
     except Exception:
         return {
             "name": "Angel",
-            "mood": "focused",
+            "mood": _DEFAULT_MOOD,
             "message": "",
             "message_ts": 0,
             "message_ttl": 60,
@@ -56,6 +59,13 @@ def main() -> None:
 
     state = _read_state()
     errors = int(state.get("session_errors", 0))
+    current_mood = state.get("mood", _DEFAULT_MOOD)
+
+    if tool_name in _THINKING_TOOLS:
+        if current_mood not in ("happy", "excited", "tired"):
+            state["mood"] = _DEFAULT_MOOD
+        _write_state(state)
+        return
 
     if tool_name == "Bash":
         is_error = any(sig in output for sig in _ERROR_SIGNALS)
@@ -63,20 +73,22 @@ def main() -> None:
         if is_error and not is_pass:
             errors += 1
             state["session_errors"] = errors
-            state["mood"] = "tired" if errors >= 3 else "focused"
+            state["mood"] = "tired" if errors >= 3 else _DEFAULT_MOOD
         elif is_pass:
             state["mood"] = "happy"
             state["session_errors"] = max(0, errors - 1)
+        elif current_mood == _DEFAULT_MOOD:
+            state["mood"] = _DEFAULT_MOOD
 
     elif tool_name in ("Edit", "Write"):
         is_error = any(sig in output for sig in _ERROR_SIGNALS)
         if is_error:
             errors += 1
             state["session_errors"] = errors
-            state["mood"] = "tired" if errors >= 3 else "focused"
+            state["mood"] = "tired" if errors >= 3 else _DEFAULT_MOOD
         else:
-            state["mood"] = "happy"
             state["session_errors"] = max(0, errors - 1)
+            return
 
     else:
         return

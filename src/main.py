@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -19,6 +20,8 @@ from src.service.reindex import ReindexState, run_initial_reindex
 from src.service.watcher import create_watchers_from_env
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s: %(message)s")
 
 
 @asynccontextmanager

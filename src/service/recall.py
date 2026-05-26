@@ -19,7 +19,7 @@ _ANGEL_STATE_PATH = Path.home() / ".guardian" / "angel-state.json"
 def _write_angel_state(
     message: str,
     *,
-    evidence: "list[RecallEvidence] | None" = None,
+    evidence: list[RecallEvidence] | None = None,
     recall_count: int = 0,
 ) -> None:
     """Write Angel's recall result to the status line state file. Silently no-ops on failure."""
@@ -164,12 +164,39 @@ class HeuristicRecallLLMClient:
 
 def _build_angel_message(prompt: str, evidence: list[RecallEvidence]) -> str:
     del prompt
-    snippets = ", ".join(
-        _compact_text(item.title or item.path or item.chunk_id, limit=24) for item in evidence[:2]
-    )
-    if snippets:
-        return f"관련 맥락: {snippets}"
-    return "관련 컨텍스트를 찾았어요"
+    if not evidence:
+        return "관련 컨텍스트를 찾았어요"
+
+    best = evidence[0]
+    score = best.similarity
+
+    if score >= 0.88:
+        intro = "딱 맞아요!"
+    elif score >= 0.78:
+        intro = "이거요:"
+    else:
+        intro = "참고:"
+
+    raw_title = best.title or (Path(best.path).stem if best.path else best.chunk_id)
+    title = _compact_text(raw_title, limit=18)
+
+    snippet = ""
+    if best.text:
+        clean = best.text.lstrip("#> -\n").strip().split("\n")[0]
+        snippet = _compact_text(clean, limit=26)
+
+    second = ""
+    if len(evidence) >= 2:
+        raw2 = evidence[1].title or (Path(evidence[1].path).stem if evidence[1].path else "")
+        second = _compact_text(raw2, limit=14)
+
+    if snippet and second:
+        return f"{intro} {title} — {snippet} (+{second})"
+    if snippet:
+        return f"{intro} {title} — {snippet}"
+    if second:
+        return f"{intro} {title}, {second}"
+    return f"{intro} {title}"
 
 
 def _compact_text(text: str, *, limit: int) -> str:
@@ -548,7 +575,8 @@ class RecallAgent:
                 "- evidence_sources: source ids used",
                 "- relevance_score: 0.0 to 1.0",
                 f"- angel_message: max {RECALL_ANGEL_MESSAGE_MAX_LENGTH} chars,"
-                " summarise the EVIDENCE relevance only — do NOT echo or repeat the user's input text",
+                " summarise the EVIDENCE relevance only"
+                " — do NOT echo or repeat the user's input text",
             ]
         )
         return "\n".join(lines)

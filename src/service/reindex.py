@@ -51,6 +51,7 @@ def _reindex_sync(state: ReindexState, graph_service) -> None:
                 save_obsidian_note(session, path=path, graph_service=graph_service)
             except Exception:
                 logger.warning("Reindex failed for %s", path, exc_info=True)
+                session.rollback()
                 state.errors += 1
             finally:
                 state.done += 1
