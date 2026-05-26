@@ -1,0 +1,21 @@
+src/service/recall.py
+  s_13ec7fb409369b::t_0abab49d6c7393 73
+tests/test_recall.py
+  s_13ec7fb409369b::t_9d263335c35cba 247
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "c289f46dc499d20d465a4a3d94d1155bc8b35122",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
