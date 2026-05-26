@@ -94,10 +94,8 @@ for L in sys.stdin.read().split('\x01'):
     print(L + ' ' * max(0, art_w - v))
 ")
 
-# ─── Speech bubble (always shown) ────────────────────────────────────────────
-BUBBLE_W=32
-B_INNER=$(( BUBBLE_W - 4 ))   # usable text width: "│ {B_INNER chars} │"
-B_FILL=$(printf '%*s' $(( BUBBLE_W - 2 )) '' | tr ' ' '─')
+# ─── Message text lines ──────────────────────────────────────────────────────
+TEXT_W=32
 
 if [ "$MOOD" = "$MOOD_HAPPY" ] || [ "$MOOD" = "$MOOD_EXCITED" ]; then
     EMOTE="*happy to help! ♥*"
@@ -107,17 +105,11 @@ else
     EMOTE="*focused and listening...*"
 fi
 
-BUBBLE_LINES=()
-BUBBLE_TYPES=()   # border | emote | blank | msg | meta
-
-BUBBLE_LINES+=("╭${B_FILL}╮"); BUBBLE_TYPES+=("border")
-
-E="${EMOTE:0:$B_INNER}"
-EPAD=$(( B_INNER - ${#E} )); [ "$EPAD" -lt 0 ] && EPAD=0
-BUBBLE_LINES+=("│ ${E}$(printf '%*s' $EPAD '') │"); BUBBLE_TYPES+=("emote")
+TEXT_LINES=("$EMOTE")
+TEXT_TYPES=("emote")
 
 if [ "$SHOW_MSG" -eq 1 ]; then
-    BUBBLE_LINES+=("│$(printf '%*s' $(( BUBBLE_W - 2 )) '')│"); BUBBLE_TYPES+=("blank")
+    TEXT_LINES+=(""); TEXT_TYPES+=("blank")
 
     META=""
     if [ -n "$LAST_RECALL_STR" ]; then
@@ -125,7 +117,6 @@ if [ "$SHOW_MSG" -eq 1 ]; then
         [ -n "$SOURCE_FILE" ] && [ "$SOURCE_FILE" != "null" ] && META="${META} · ${SOURCE_FILE}"
     fi
 
-    # Python3 handles visual width of wide chars (Korean, emoji, etc.)
     _PY_OUT=$(printf '%s\x01%s' "${MESSAGE}" "$META" | python3 -c "
 import sys, unicodedata
 
@@ -138,12 +129,10 @@ def vwrap(s, w):
         chunk, v = '', 0
         for c in s:
             cw = vcw(c)
-            if v + cw > w:
-                break
+            if v + cw > w: break
             chunk += c; v += cw
-        if not chunk:
-            break
-        lines.append('│ ' + chunk + ' ' * (w - v) + ' │')
+        if not chunk: break
+        lines.append(chunk)
         s = s[len(chunk):]
     return lines
 
@@ -153,78 +142,58 @@ def vtrunc(s, w):
         cw = vcw(c)
         if v + cw > w: break
         chunk += c; v += cw
-    return '│ ' + chunk + ' ' * (w - v) + ' │'
+    return chunk
 
-B = $B_INNER
+W = $TEXT_W
 parts = sys.stdin.read().split('\x01')
 msg  = parts[0] if len(parts) > 0 else ''
 meta = parts[1] if len(parts) > 1 else ''
-
-for line in vwrap(msg, B):
+for line in vwrap(msg, W):
     print('msg\t' + line)
 if meta.strip():
-    print('meta\t' + vtrunc(meta, B))
+    print('meta\t' + vtrunc(meta, W))
 ")
-    while IFS=$'\t' read -r _type _bline; do
-        BUBBLE_LINES+=("$_bline"); BUBBLE_TYPES+=("$_type")
+    while IFS=$'\t' read -r _type _tline; do
+        TEXT_LINES+=("$_tline"); TEXT_TYPES+=("$_type")
     done <<< "$_PY_OUT"
 fi
 
-# Pad bubble with blank lines inside the box to match ART height
+TEXT_COUNT=${#TEXT_LINES[@]}
 ART_COUNT=${#ART[@]}
-CORE_COUNT=$(( ${#BUBBLE_LINES[@]} + 1 ))   # +1 for closing border
-PAD_NEEDED=$(( ART_COUNT - CORE_COUNT ))
-if [ "$PAD_NEEDED" -gt 0 ]; then
-    BLANK_LINE="│$(printf '%*s' $(( BUBBLE_W - 2 )) '')│"
-    for (( _p=0; _p<PAD_NEEDED; _p++ )); do
-        BUBBLE_LINES+=("$BLANK_LINE"); BUBBLE_TYPES+=("blank")
-    done
-fi
-BUBBLE_LINES+=("╰${B_FILL}╯"); BUBBLE_TYPES+=("border")
-
-BUBBLE_COUNT=${#BUBBLE_LINES[@]}
 
 # ─── Terminal width & right-align ────────────────────────────────────────────
 COLS=$(tput cols 2>/dev/null || echo "${COLUMNS:-120}")
-GAP_W=3           # " — " or "   "
+GAP_W=3
 MARGIN=2
 CLAUDE_OFFSET=3   # Claude Code prepends 3 spaces of its own padding per line
 
-TOTAL_W=$(( BUBBLE_W + GAP_W + ART_W ))
+TOTAL_W=$(( ART_W + GAP_W + TEXT_W ))
 PAD=$(( COLS - TOTAL_W - MARGIN - CLAUDE_OFFSET ))
 [ "$PAD" -lt 0 ] && PAD=0
 SP=$(printf '%*s' "$PAD" '')
 
-ART_START=0
-BUBBLE_START=0
-MAX_LINES=$(( BUBBLE_COUNT > ART_COUNT ? BUBBLE_COUNT : ART_COUNT ))
+MAX_LINES=$(( TEXT_COUNT > ART_COUNT ? TEXT_COUNT : ART_COUNT ))
 
-CONNECTOR_BI=$(( BUBBLE_COUNT / 2 ))
-
-# ─── Render art + bubble ─────────────────────────────────────────────────────
+# ─── Render art + text ───────────────────────────────────────────────────────
 for (( i=0; i<MAX_LINES; i++ )); do
-    ai=$(( i - ART_START ))
-    if [ $ai -ge 0 ] && [ $ai -lt $ART_COUNT ]; then
-        ART_COL="${PADDED_ART[$ai]}"
+    if [ $i -lt $ART_COUNT ]; then
+        ART_COL="${PADDED_ART[$i]}"
     else
         ART_COL="$(printf '%*s' $ART_W '')"
     fi
 
-    bi=$(( i - BUBBLE_START ))
-    if [ $bi -ge 0 ] && [ $bi -lt $BUBBLE_COUNT ]; then
-        bline="${BUBBLE_LINES[$bi]}"
-        btype="${BUBBLE_TYPES[$bi]}"
-        [ $bi -eq $CONNECTOR_BI ] && GAP_STR=" ${CB}─${NC} " || GAP_STR="   "
-        inner="${bline:1:$(( ${#bline} - 2 ))}"
-        case "$btype" in
-            border) printf '%s%s%s%s\n'     "$SP" "$ART_COL" "$GAP_STR" "${CB}${bline}${NC}" ;;
-            emote)  printf '%s%s%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${CB}│${NC}" "${PINK}${DIM}${inner}${NC}" "${CB}│${NC}" ;;
-            blank)  printf '%s%s%s%s\n'     "$SP" "$ART_COL" "$GAP_STR" "${CB}${bline}${NC}" ;;
-            msg)    printf '%s%s%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${CB}│${NC}" "${DIM}${inner}${NC}" "${CB}│${NC}" ;;
-            meta)   printf '%s%s%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${CB}│${NC}" "${GRAY}${inner}${NC}" "${CB}│${NC}" ;;
+    if [ $i -lt $TEXT_COUNT ]; then
+        tline="${TEXT_LINES[$i]}"
+        ttype="${TEXT_TYPES[$i]}"
+        [ $i -eq 0 ] && GAP_STR=" ${CB}─${NC} " || GAP_STR="   "
+        case "$ttype" in
+            emote) printf '%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${PINK}${DIM}${tline}${NC}" ;;
+            blank) printf '%s%s\n'     "$SP" "$ART_COL" ;;
+            msg)   printf '%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${DIM}${tline}${NC}" ;;
+            meta)  printf '%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${GRAY}${tline}${NC}" ;;
         esac
     else
-        printf '%s%s%s%s\n' "$SP" "$ART_COL" "   " "$(printf '%*s' $BUBBLE_W '')"
+        printf '%s%s\n' "$SP" "$ART_COL"
     fi
 done
 
