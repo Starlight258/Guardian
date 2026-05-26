@@ -199,19 +199,17 @@ def _build_angel_message(prompt: str, evidence: list[RecallEvidence]) -> str:
     snippet = ""
     if best.text:
         clean = best.text.lstrip("#> -\n").strip().split("\n")[0]
-        snippet = _compact_text(clean, limit=26)
+        snippet = _compact_text(clean, limit=80)
 
     second = ""
     if len(evidence) >= 2:
         raw2 = evidence[1].title or (Path(evidence[1].path).stem if evidence[1].path else "")
         second = _compact_text(raw2, limit=14)
 
-    if snippet and second:
-        return f"{intro} {title} — {snippet} (+{second})"
     if snippet:
-        return f"{intro} {title} — {snippet}"
+        return f"{intro} {snippet}"
     if second:
-        return f"{intro} {title}, {second}"
+        return f"{intro} {title} (+{second})"
     return f"{intro} {title}"
 
 
@@ -597,9 +595,13 @@ class RecallAgent:
                 "- chunk_ids: selected chunk ids",
                 "- evidence_sources: source ids used",
                 "- relevance_score: 0.0 to 1.0",
-                f"- angel_message: max {RECALL_ANGEL_MESSAGE_MAX_LENGTH} chars,"
-                " summarise the EVIDENCE relevance only"
-                " — do NOT echo or repeat the user's input text",
+                f"- angel_message: max {RECALL_ANGEL_MESSAGE_MAX_LENGTH} chars."
+                " Pull ONE specific fact, comparison, or decision point directly"
+                " from the note text that the user might actually need right now."
+                " Be concrete — quote numbers, names, or conclusions if present."
+                " Do NOT describe what the note is about."
+                " Do NOT start with 'Found', 'The note', or 'Based on'."
+                " Do NOT repeat the user's input.",
             ]
         )
         return "\n".join(lines)
