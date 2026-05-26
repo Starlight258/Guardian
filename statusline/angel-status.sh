@@ -154,13 +154,13 @@ MAX_LINES=$(( BUBBLE_COUNT > ART_COUNT ? BUBBLE_COUNT : ART_COUNT ))
 
 CONNECTOR_BI=$(( BUBBLE_COUNT / 2 ))
 
-# ─── Render bubble + art ─────────────────────────────────────────────────────
+# ─── Render art + bubble ─────────────────────────────────────────────────────
 for (( i=0; i<MAX_LINES; i++ )); do
     ai=$(( i - ART_START ))
     if [ $ai -ge 0 ] && [ $ai -lt $ART_COUNT ]; then
         ART_COL="${ART[$ai]}${NC}"
     else
-        ART_COL=""
+        ART_COL="$(printf '%*s' $ART_W '')"
     fi
 
     bi=$(( i - BUBBLE_START ))
@@ -170,14 +170,14 @@ for (( i=0; i<MAX_LINES; i++ )); do
         [ $bi -eq $CONNECTOR_BI ] && GAP_STR=" ${CB}─${NC} " || GAP_STR="   "
         inner="${bline:1:$(( ${#bline} - 2 ))}"
         case "$btype" in
-            border) printf '%s%s%s%s\n' "$SP" "${CB}${bline}${NC}"             "$GAP_STR" "$ART_COL" ;;
-            emote)  printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${PINK}${DIM}${inner}${NC}" "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
-            blank)  printf '%s%s%s%s\n' "$SP" "${CB}${bline}${NC}"             "$GAP_STR" "$ART_COL" ;;
-            msg)    printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${DIM}${inner}${NC}"       "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
-            meta)   printf '%s%s%s%s%s%s\n' "$SP" "${CB}│${NC}" "${GRAY}${inner}${NC}"      "${CB}│${NC}" "$GAP_STR" "$ART_COL" ;;
+            border) printf '%s%s%s%s\n'     "$SP" "$ART_COL" "$GAP_STR" "${CB}${bline}${NC}" ;;
+            emote)  printf '%s%s%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${CB}│${NC}" "${PINK}${DIM}${inner}${NC}" "${CB}│${NC}" ;;
+            blank)  printf '%s%s%s%s\n'     "$SP" "$ART_COL" "$GAP_STR" "${CB}${bline}${NC}" ;;
+            msg)    printf '%s%s%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${CB}│${NC}" "${DIM}${inner}${NC}" "${CB}│${NC}" ;;
+            meta)   printf '%s%s%s%s%s%s\n' "$SP" "$ART_COL" "$GAP_STR" "${CB}│${NC}" "${GRAY}${inner}${NC}" "${CB}│${NC}" ;;
         esac
     else
-        printf '%s%s%s%s\n' "$SP" "$(printf '%*s' $BUBBLE_W '')" "   " "$ART_COL"
+        printf '%s%s%s%s\n' "$SP" "$ART_COL" "   " "$(printf '%*s' $BUBBLE_W '')"
     fi
 done
 
