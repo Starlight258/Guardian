@@ -12,7 +12,7 @@ from src.schemas.events import (
     SessionCheckpointResponse,
 )
 from src.service.checkpoint import SessionCheckpoint, capture_session_checkpoint
-from src.service.recall_trigger import MIN_PROMPT_TOKENS, trigger_recall_from_prompt
+from src.service.recall_trigger import MIN_PROMPT_CHARS, trigger_recall_from_prompt
 
 router = APIRouter(prefix="/events", tags=["events"])
 DBSession = Depends(get_db)
@@ -46,8 +46,8 @@ def receive_prompt_event(
 
     return PromptEventResponse(
         status=result.status,
-        token_count=result.token_count,
-        min_tokens=MIN_PROMPT_TOKENS,
+        char_count=result.char_count,
+        min_chars=MIN_PROMPT_CHARS,
         recall_triggered=result.recall_triggered,
         reason=result.reason,
     )

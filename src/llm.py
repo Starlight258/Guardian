@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 CIRCUIT_FAILURE_THRESHOLD = 3
 CIRCUIT_RECOVERY_TIMEOUT = 60.0
-DEFAULT_ANTHROPIC_MODEL = "claude-opus-4-7"
+DEFAULT_ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 DEFAULT_LOCAL_MODEL = "qwen2.5:3b"
 DEFAULT_ANTHROPIC_TIMEOUT = 10.0
 DEFAULT_LOCAL_TIMEOUT = 30.0
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 
 
 class CircuitBreaker:

@@ -20,8 +20,8 @@ class PromptEventRequest(BaseModel):
 
 class PromptEventResponse(BaseModel):
     status: str
-    token_count: int
-    min_tokens: int
+    char_count: int
+    min_chars: int
     recall_triggered: bool
     reason: str | None = None
 

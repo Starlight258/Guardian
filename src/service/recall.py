@@ -401,11 +401,18 @@ class RecallAgent:
             )
 
         tool_schema = self._build_tool_schema()
+        llm_prompt = self._build_llm_prompt(context=context, evidence=retrieved_evidence)
         response = self.llm_client.complete(
-            prompt=self._build_llm_prompt(context=context, evidence=retrieved_evidence),
+            prompt=llm_prompt,
             evidence=retrieved_evidence,
             tool_schema=tool_schema,
         )
+        if response is None:
+            response = HeuristicRecallLLMClient().complete(
+                prompt=llm_prompt,
+                evidence=retrieved_evidence,
+                tool_schema=tool_schema,
+            )
         tool_output = _extract_tool_output(response)
         if tool_output is None:
             return self._save_result(

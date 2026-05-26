@@ -11,6 +11,7 @@ services:
     volumes:
       - ./data:/app/data
       - huggingface_cache:/root/.cache/huggingface
+      - ~/.guardian:/root/.guardian
       # Obsidian vault — same path as GUARDIAN_OBSIDIAN_PATHS in .env
       - "/Users/mae/Library/Mobile Documents/iCloud~md~obsidian:/Users/mae/Library/Mobile Documents/iCloud~md~obsidian:ro"
 
