@@ -244,7 +244,7 @@ def test_recall_endpoint_drops_below_threshold(monkeypatch) -> None:
     llm_client = FakeLLMClient(
         chunk_ids=[first.id],
         evidence_sources=["source-1"],
-        relevance_score=0.5,
+        relevance_score=0.3,
         angel_message="this should be dropped",
     )
     agent = RecallAgent(graph_service=graph_service, llm_client=llm_client)
