@@ -95,7 +95,7 @@ for L in sys.stdin.read().split('\x01'):
 ")
 
 # ─── Message text lines ──────────────────────────────────────────────────────
-TEXT_W=32
+TEXT_W=40
 
 if [ "$MOOD" = "$MOOD_HAPPY" ] || [ "$MOOD" = "$MOOD_EXCITED" ]; then
     EMOTE="*happy to help! ♥*"
@@ -109,8 +109,6 @@ TEXT_LINES=("$EMOTE")
 TEXT_TYPES=("emote")
 
 if [ "$SHOW_MSG" -eq 1 ]; then
-    TEXT_LINES+=(""); TEXT_TYPES+=("blank")
-
     META=""
     if [ -n "$LAST_RECALL_STR" ]; then
         META="$LAST_RECALL_STR"
@@ -123,17 +121,19 @@ import sys, unicodedata
 def vcw(c):
     return 2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1
 
-def vwrap(s, w):
-    lines = []
-    while s:
-        chunk, v = '', 0
-        for c in s:
-            cw = vcw(c)
-            if v + cw > w: break
-            chunk += c; v += cw
-        if not chunk: break
-        lines.append(chunk)
-        s = s[len(chunk):]
+def vwrap_words(s, w):
+    words = s.split(' ')
+    lines, cur, cv = [], '', 0
+    for word in words:
+        wv = sum(vcw(c) for c in word)
+        if cur and cv + 1 + wv > w:
+            lines.append(cur)
+            cur, cv = word, wv
+        else:
+            cur = (cur + ' ' + word).lstrip() if cur else word
+            cv = cv + (1 if cur != word else 0) + wv
+    if cur:
+        lines.append(cur)
     return lines
 
 def vtrunc(s, w):
@@ -148,7 +148,7 @@ W = $TEXT_W
 parts = sys.stdin.read().split('\x01')
 msg  = parts[0] if len(parts) > 0 else ''
 meta = parts[1] if len(parts) > 1 else ''
-for line in vwrap(msg, W):
+for line in vwrap_words(msg, W):
     print('msg\t' + line)
 if meta.strip():
     print('meta\t' + vtrunc(meta, W))
