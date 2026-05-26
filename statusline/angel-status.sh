@@ -10,10 +10,20 @@
 STATE="$HOME/.guardian/angel-state.json"
 [ -f "$STATE" ] || exit 0
 
+# ─── Mood constants ───────────────────────────────────────────────────────────
+MOOD_FOCUSED="focused"
+MOOD_HAPPY="happy"
+MOOD_EXCITED="excited"
+MOOD_TIRED="tired"
+MOOD_THINKING="thinking"
+MOOD_DEFAULT="$MOOD_FOCUSED"
+MOOD_DECAY_SECS=30
+
 MUTED=$(jq -r '.muted // false' "$STATE" 2>/dev/null)
 [ "$MUTED" = "true" ] && exit 0
 
 MOOD=$(jq -r '.mood // "focused"' "$STATE" 2>/dev/null)
+MOOD_TS=$(jq -r '.mood_ts // 0' "$STATE" 2>/dev/null)
 MESSAGE=$(jq -r '.message // ""' "$STATE" 2>/dev/null)
 MSG_TS=$(jq -r '.message_ts // 0' "$STATE" 2>/dev/null)
 MSG_TTL=$(jq -r '.message_ttl // 60' "$STATE" 2>/dev/null)
@@ -23,6 +33,12 @@ LAST_RECALL_TS=$(jq -r '.last_recall_ts // 0' "$STATE" 2>/dev/null)
 GUARDIAN_ACTIVE=$(jq -r '.guardian_active // true' "$STATE" 2>/dev/null)
 
 NOW=$(date +%s)
+
+# ─── Mood decay: any transient mood → default after MOOD_DECAY_SECS ──────────
+if [ "$MOOD" != "$MOOD_DEFAULT" ] && [ "$MOOD_TS" -gt 0 ] 2>/dev/null; then
+    MOOD_AGE=$(( NOW - MOOD_TS ))
+    [ "$MOOD_AGE" -gt "$MOOD_DECAY_SECS" ] && MOOD="$MOOD_DEFAULT"
+fi
 
 # ─── Message freshness ───────────────────────────────────────────────────────
 SHOW_MSG=0
@@ -67,11 +83,13 @@ BUBBLE_W=32
 B_INNER=$(( BUBBLE_W - 4 ))   # usable text width: "│ {B_INNER chars} │"
 B_FILL=$(printf '%*s' $(( BUBBLE_W - 2 )) '' | tr ' ' '─')
 
-case "$MOOD" in
-    happy|excited) EMOTE="*happy to help! ♥*" ;;
-    tired)         EMOTE="*a bit tired... zzz*" ;;
-    *)             EMOTE="*focused and listening...*" ;;
-esac
+if [ "$MOOD" = "$MOOD_HAPPY" ] || [ "$MOOD" = "$MOOD_EXCITED" ]; then
+    EMOTE="*happy to help! ♥*"
+elif [ "$MOOD" = "$MOOD_TIRED" ]; then
+    EMOTE="*a bit tired... zzz*"
+else
+    EMOTE="*focused and listening...*"
+fi
 
 BUBBLE_LINES=()
 BUBBLE_TYPES=()   # border | emote | blank | msg | meta

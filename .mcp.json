@@ -2,8 +2,20 @@
   "mcpServers": {
     "guardian": {
       "command": "uv",
-      "args": ["run", "guardian-mcp"],
+      "args": [
+        "run",
+        "guardian-mcp"
+      ],
       "cwd": "/Users/mae/Desktop/Develop/Guardian"
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "env": {}
     }
   }
 }

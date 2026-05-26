@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -14,6 +15,14 @@ from src.service.graph import GraphService
 from src.utils import hash_text
 
 _ANGEL_STATE_PATH = Path.home() / ".guardian" / "angel-state.json"
+
+
+class Mood(StrEnum):
+    FOCUSED = "focused"
+    HAPPY = "happy"
+    EXCITED = "excited"
+    TIRED = "tired"
+    THINKING = "thinking"
 
 
 def _write_angel_state(
@@ -39,14 +48,21 @@ def _write_angel_state(
             source_title = first.title
             source_file = Path(first.path).name if first.path else None
 
+        now = int(time.time())
+        try:
+            current_mood = Mood(existing.get("mood", Mood.FOCUSED.value))
+        except ValueError:
+            current_mood = Mood.FOCUSED
+        new_mood = Mood.EXCITED if current_mood is not Mood.TIRED else Mood.TIRED
         existing.update({
             "message": message,
-            "message_ts": int(time.time()),
-            "mood": "excited" if existing.get("mood") not in ("tired",) else "tired",
+            "message_ts": now,
+            "mood": new_mood.value,
+            "mood_ts": now,
             "source_title": source_title,
             "source_file": source_file,
             "recall_count": (existing.get("recall_count") or 0) + 1,
-            "last_recall_ts": int(time.time()),
+            "last_recall_ts": now,
         })
         _ANGEL_STATE_PATH.write_text(json.dumps(existing, ensure_ascii=False))
     except Exception:

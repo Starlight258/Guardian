@@ -34,69 +34,64 @@
 BLINK=$(( NOW % 8 ))
 
 # ── Mood-based art ────────────────────────────────────────────────────────
-case "$MOOD" in
-    happy|excited)
-        #   ˚₊‧✧‧₊˚           ← 2-space lead
-        #    /)  /)            ← 4-space lead
-        #  ૮(˶ᵔᗜᵔ˶)ﾉﾞა       ← 2-space lead (wide arm)
-        #   ꒰ঌ ♡ ໒꒱           ← 3-space lead
-        #     ╲╱              ← 6-space lead
-        #   ☁︎ ⋆ ☁︎            ← 3-space lead
-        HALO_LINE="${NC}   ${LAVENDER}˚₊‧${GOLD}✧${LAVENDER}‧₊˚${NC}"
-        EARS_LINE="${NC}    ${SKIN}/)  /)${NC}"
-        FACE_LINE="${NC}  ${SKIN}૮(${GOLD}˶ᵔᗜᵔ˶)ﾉﾞ${SKIN}ა${NC}"
-        BLINK_LINE="${NC}  ${SKIN}૮(${GOLD}˶˘ᗜ˘˶)ﾉﾞ${SKIN}ა${NC}"
-        ITEM="${PINK}♡${NC}"; ITEM_LEAD="  "
-        FEET="${NC}     ${WHITE}╲╱${NC}"
-        DECO="${GOLD}⋆${NC}"; DECO_LEAD="    "
-        ;;
-    tired)
-        #  ˚₊‧꒰ა ☾ ໒꒱‧₊˚
-        #     /)  /)
-        #   ૮( • ﹃ - )ა    ← 5-space lead
-        #    ꒰ঌ ✧ ໒꒱
-        #      ╲╱
-        #    ☁︎ ♡ ☁︎
-        HALO_LINE="${NC}    ${LAVENDER}˚₊‧꒰ა${NC} ${GRAY}☾${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
-        EARS_LINE="${NC}        ${SKIN}/)  /)${NC} ᶻ 𝗓 𐰁"
-        FACE_LINE="${NC}     ${SKIN}૮(${GRAY} • ﹃ - ${SKIN})ა${NC}"
-        BLINK_LINE="${NC}     ${SKIN}૮(${GRAY} ˘ ﹃ ˘ ${SKIN})ა${NC}"
-        ITEM="${PINK}✧${NC}"; ITEM_LEAD="      "
-        FEET="${NC}         ${WHITE}╲╱${NC}"
-        DECO="${GRAY}♡${NC}"; DECO_LEAD="       "
-        ;;
-    thinking)
-        #  ˚₊‧꒰ა ✦ ໒꒱‧₊˚
-        #     /)  /)
-        #   ૮(𐔌՞. .՞𐦯)ა   ← 5-space lead
-        #    ꒰ঌ ✦ ໒꒱
-        #      ╲╱
-        #    ☁︎ ⊹ ☁︎
-        HALO_LINE="${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${PURPLE}✦${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
-        EARS_LINE="${NC}        ${SKIN}/)  /)${NC}"
-        FACE_LINE="${NC}     ${SKIN}૮(𐔌՞. .՞𐦯)ა${NC}"
-        BLINK_LINE="${NC}     ${SKIN}૮(𐔌•̀ ᎑-՞𐦯)ა${NC}"
-        ITEM="${LAVENDER}✦${NC}"; ITEM_LEAD="      "
-        FEET="${NC}         ${WHITE}╲╱${NC}"
-        DECO="${PURPLE}⊹${NC}"; DECO_LEAD="      "
-        ;;
-    *)
-        # focused / default
-        #  ˚₊‧꒰ა 𓂋 ໒꒱‧₊˚
-        #     /)  /)
-        #   ૮(˶• ֊ •˶)ა   ← 5-space lead
-        #    ꒰ঌ ♡ ໒꒱
-        #      ╲╱
-        #    ☁︎ ⋆ ☁︎
-        HALO_LINE="${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${GOLD}𓂋${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
-        EARS_LINE="${NC}        ${SKIN}/)  /)${NC}"
-        FACE_LINE="${NC}     ${SKIN}૮(˶• ֊ •˶)ა${NC}"
-        BLINK_LINE="${NC}     ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
-        ITEM="${PINK}♡${NC}"; ITEM_LEAD="      "
-        FEET="${NC}         ${WHITE}╲╱${NC}"
-        DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="      "
-        ;;
-esac
+if [ "$MOOD" = "$MOOD_HAPPY" ] || [ "$MOOD" = "$MOOD_EXCITED" ]; then
+    #   ˚₊‧✧‧₊˚           ← 2-space lead
+    #    /)  /)            ← 4-space lead
+    #  ૮(˶ᵔᗜᵔ˶)ﾉﾞა       ← 2-space lead (wide arm)
+    #   ꒰ঌ ♡ ໒꒱           ← 3-space lead
+    #     ╲╱              ← 6-space lead
+    #   ☁︎ ⋆ ☁︎            ← 3-space lead
+    HALO_LINE="${NC}   ${LAVENDER}˚₊‧${GOLD}✧${LAVENDER}‧₊˚${NC}"
+    EARS_LINE="${NC}    ${SKIN}/)  /)${NC}"
+    FACE_LINE="${NC}  ${SKIN}૮(${GOLD}˶ᵔᗜᵔ˶)ﾉﾞ${SKIN}ა${NC}"
+    BLINK_LINE="${NC}  ${SKIN}૮(${GOLD}˶˘ᗜ˘˶)ﾉﾞ${SKIN}ა${NC}"
+    ITEM="${PINK}♡${NC}"; ITEM_LEAD="  "
+    FEET="${NC}     ${WHITE}╲╱${NC}"
+    DECO="${GOLD}⋆${NC}"; DECO_LEAD="    "
+elif [ "$MOOD" = "$MOOD_TIRED" ]; then
+    #  ˚₊‧꒰ა ☾ ໒꒱‧₊˚
+    #     /)  /)
+    #   ૮( • ﹃ - )ა    ← 5-space lead
+    #    ꒰ঌ ✧ ໒꒱
+    #      ╲╱
+    #    ☁︎ ♡ ☁︎
+    HALO_LINE="${NC}    ${LAVENDER}˚₊‧꒰ა${NC} ${GRAY}☾${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
+    EARS_LINE="${NC}        ${SKIN}/)  /)${NC} ᶻ 𝗓 𐰁"
+    FACE_LINE="${NC}     ${SKIN}૮(${GRAY} • ﹃ - ${SKIN})ა${NC}"
+    BLINK_LINE="${NC}     ${SKIN}૮(${GRAY} ˘ ﹃ ˘ ${SKIN})ა${NC}"
+    ITEM="${PINK}✧${NC}"; ITEM_LEAD="      "
+    FEET="${NC}         ${WHITE}╲╱${NC}"
+    DECO="${GRAY}♡${NC}"; DECO_LEAD="       "
+elif [ "$MOOD" = "$MOOD_THINKING" ]; then
+    #  ˚₊‧꒰ა ✦ ໒꒱‧₊˚
+    #     /)  /)
+    #   ૮(𐔌՞. .՞𐦯)ა   ← 5-space lead
+    #    ꒰ঌ ✦ ໒꒱
+    #      ╲╱
+    #    ☁︎ ⊹ ☁︎
+    HALO_LINE="${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${PURPLE}✦${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
+    EARS_LINE="${NC}        ${SKIN}/)  /)${NC}"
+    FACE_LINE="${NC}     ${SKIN}૮(𐔌՞. .՞𐦯)ა${NC}"
+    BLINK_LINE="${NC}     ${SKIN}૮(𐔌•̀ ᎑-՞𐦯)ა${NC}"
+    ITEM="${LAVENDER}✦${NC}"; ITEM_LEAD="      "
+    FEET="${NC}         ${WHITE}╲╱${NC}"
+    DECO="${PURPLE}⊹${NC}"; DECO_LEAD="      "
+else
+    # focused / default
+    #  ˚₊‧꒰ა 𓂋 ໒꒱‧₊˚
+    #     /)  /)
+    #   ૮(˶• ֊ •˶)ა   ← 5-space lead
+    #    ꒰ঌ ♡ ໒꒱
+    #      ╲╱
+    #    ☁︎ ⋆ ☁︎
+    HALO_LINE="${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${GOLD}𓂋${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
+    EARS_LINE="${NC}        ${SKIN}/)  /)${NC}"
+    FACE_LINE="${NC}     ${SKIN}૮(˶• ֊ •˶)ა${NC}"
+    BLINK_LINE="${NC}     ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
+    ITEM="${PINK}♡${NC}"; ITEM_LEAD="      "
+    FEET="${NC}         ${WHITE}╲╱${NC}"
+    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="      "
+fi
 
 [ "$BLINK" -lt 2 ] && FACE_LINE="$BLINK_LINE"
 

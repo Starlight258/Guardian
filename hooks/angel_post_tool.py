@@ -11,14 +11,26 @@ import json
 import os
 import sys
 import time
+from enum import StrEnum
 from pathlib import Path
 
 _STATE_PATH = Path.home() / ".guardian" / "angel-state.json"
-_DEFAULT_MOOD = os.environ.get("ANGEL_DEFAULT_MOOD", "focused")
 
 _ERROR_SIGNALS = ("Error:", "FAILED", "Traceback", "Exception", " failed", "exit code")
 _PASS_SIGNALS = (" passed", "SUCCESS", "✓", "All tests")
 _THINKING_TOOLS = {"Read", "Glob", "Grep", "Task", "Explore"}
+
+
+class Mood(StrEnum):
+    FOCUSED = "focused"
+    HAPPY = "happy"
+    EXCITED = "excited"
+    TIRED = "tired"
+    THINKING = "thinking"
+
+
+DEFAULT_MOOD = Mood(os.environ.get("ANGEL_DEFAULT_MOOD", Mood.FOCUSED.value))
+TRANSIENT_MOODS = {Mood.HAPPY, Mood.EXCITED, Mood.TIRED, Mood.THINKING}
 
 
 def _read_state() -> dict:
@@ -27,7 +39,7 @@ def _read_state() -> dict:
     except Exception:
         return {
             "name": "Angel",
-            "mood": _DEFAULT_MOOD,
+            "mood": DEFAULT_MOOD.value,
             "message": "",
             "message_ts": 0,
             "message_ttl": 60,
@@ -42,6 +54,12 @@ def _write_state(state: dict) -> None:
         _STATE_PATH.write_text(json.dumps(state, ensure_ascii=False))
     except Exception:
         pass
+
+
+def _set_mood(state: dict, mood: Mood) -> None:
+    state["mood"] = mood.value
+    if mood in TRANSIENT_MOODS:
+        state["mood_ts"] = int(time.time())
 
 
 def main() -> None:
@@ -59,11 +77,15 @@ def main() -> None:
 
     state = _read_state()
     errors = int(state.get("session_errors", 0))
-    current_mood = state.get("mood", _DEFAULT_MOOD)
+
+    try:
+        current_mood = Mood(state.get("mood", DEFAULT_MOOD.value))
+    except ValueError:
+        current_mood = DEFAULT_MOOD
 
     if tool_name in _THINKING_TOOLS:
-        if current_mood not in ("happy", "excited", "tired"):
-            state["mood"] = _DEFAULT_MOOD
+        if current_mood not in TRANSIENT_MOODS:
+            _set_mood(state, DEFAULT_MOOD)
         _write_state(state)
         return
 
@@ -73,19 +95,19 @@ def main() -> None:
         if is_error and not is_pass:
             errors += 1
             state["session_errors"] = errors
-            state["mood"] = "tired" if errors >= 3 else _DEFAULT_MOOD
+            _set_mood(state, Mood.TIRED if errors >= 3 else DEFAULT_MOOD)
         elif is_pass:
-            state["mood"] = "happy"
             state["session_errors"] = max(0, errors - 1)
-        elif current_mood == _DEFAULT_MOOD:
-            state["mood"] = _DEFAULT_MOOD
+            _set_mood(state, Mood.HAPPY)
+        elif current_mood == DEFAULT_MOOD:
+            _set_mood(state, DEFAULT_MOOD)
 
     elif tool_name in ("Edit", "Write"):
         is_error = any(sig in output for sig in _ERROR_SIGNALS)
         if is_error:
             errors += 1
             state["session_errors"] = errors
-            state["mood"] = "tired" if errors >= 3 else _DEFAULT_MOOD
+            _set_mood(state, Mood.TIRED if errors >= 3 else DEFAULT_MOOD)
         else:
             state["session_errors"] = max(0, errors - 1)
             return
