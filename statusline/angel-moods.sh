@@ -90,7 +90,7 @@ else
     BLINK_LINE="${NC}     ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
     ITEM="${PINK}♡${NC}"; ITEM_LEAD="      "
     FEET="${NC}         ${WHITE}╲╱${NC}"
-    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="      "
+    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="       "
 fi
 
 [ "$BLINK" -lt 2 ] && FACE_LINE="$BLINK_LINE"

@@ -78,6 +78,22 @@ ART_W=20
 # shellcheck source=angel-moods.sh
 . "$(dirname "$0")/angel-moods.sh"
 
+# Pad each art line to ART_W visible columns so the bubble box aligns correctly
+# when art is on the left. Uses unicodedata.east_asian_width for accurate width.
+PADDED_ART=()
+while IFS= read -r _line; do
+    PADDED_ART+=("$_line")
+done < <(printf '%s\x01' "${ART[@]}" | python3 -c "
+import sys, re, unicodedata
+art_w = $ART_W
+for L in sys.stdin.read().split('\x01'):
+    if not L:
+        continue
+    clean = re.sub(r'\033\[[^m]*m', '', L)
+    v = sum(2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1 for c in clean)
+    print(L + ' ' * max(0, art_w - v))
+")
+
 # ─── Speech bubble (always shown) ────────────────────────────────────────────
 BUBBLE_W=32
 B_INNER=$(( BUBBLE_W - 4 ))   # usable text width: "│ {B_INNER chars} │"
@@ -133,7 +149,7 @@ if [ "$PAD_NEEDED" -gt 0 ]; then
         BUBBLE_LINES+=("$BLANK_LINE"); BUBBLE_TYPES+=("blank")
     done
 fi
-BUBBLE_LINES+=("╰${B_FILL}╯"); BUBBLE_TYPES+=("border")
+BUBBLE_LINES+=("  ╰${B_FILL}╯"); BUBBLE_TYPES+=("border")
 
 BUBBLE_COUNT=${#BUBBLE_LINES[@]}
 
@@ -158,7 +174,7 @@ CONNECTOR_BI=$(( BUBBLE_COUNT / 2 ))
 for (( i=0; i<MAX_LINES; i++ )); do
     ai=$(( i - ART_START ))
     if [ $ai -ge 0 ] && [ $ai -lt $ART_COUNT ]; then
-        ART_COL="${ART[$ai]}${NC}"
+        ART_COL="${PADDED_ART[$ai]}"
     else
         ART_COL="$(printf '%*s' $ART_W '')"
     fi
