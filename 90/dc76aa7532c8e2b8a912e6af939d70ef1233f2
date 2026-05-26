@@ -1,0 +1,33 @@
+docker-compose.yml
+  s_13ec7fb409369b::t_b2fdd0e6a654e2 14
+src/schemas/events.py
+  s_13ec7fb409369b::t_68b3d0b94ab83b 23-24
+tests/test_events.py
+  s_13ec7fb409369b::t_236c37b2e2f659 13,18-19,21,26,33,52-53,60
+src/service/recall.py
+  s_13ec7fb409369b::t_f27863f70326a7 404,406,410-415
+src/llm.py
+  s_13ec7fb409369b::t_555468c0dc40ac 22
+  s_13ec7fb409369b::t_890e29978b95c0 18
+src/service/recall_trigger.py
+  s_13ec7fb409369b::t_d4b7085430cb81 12,18,28,43-44,47,49,54,81
+src/api/events.py
+  s_13ec7fb409369b::t_94ff8ff510c189 15
+  s_13ec7fb409369b::t_54f6ba506d7ae0 49-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "90dc76aa7532c8e2b8a912e6af939d70ef1233f2",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
