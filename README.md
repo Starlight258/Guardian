@@ -196,11 +196,27 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 ## Evaluation
 
 ```bash
-bash eval/run.sh            # 전체 평가 (ragas 포함)
-bash eval/run.sh --skip-ragas  # 빠른 평가 (ragas 생략)
+bash eval/run.sh                      # 큐레이션 케이스로 평가 (ragas 포함)
+bash eval/run.sh --generate           # 케이스 자동 생성 후 평가
+bash eval/run.sh --skip-ragas         # ragas 생략 (빠른 평가)
+bash eval/run.sh --generate --skip-ragas
 ```
 
-`eval/cases.jsonl`에 정의된 케이스를 실행하고 네 가지 메트릭을 측정해요.
+**케이스 종류**
+
+| 방식 | 파일 | 설명 |
+|---|---|---|
+| 자동 생성 | `eval/generated_cases.jsonl` | `--generate` 실행 시 Obsidian 노트에서 Claude Haiku가 생성 |
+| 수동 큐레이션 | `eval/cases.jsonl` | 직접 작성한 고정 케이스 |
+
+수동 케이스를 추가하려면 `eval/cases.jsonl`에 한 줄씩 추가해요.
+
+```json
+{"query": "질문 내용", "should_trigger": true, "expected_source": "노트파일.md"}
+{"query": "관련 없는 질문", "should_trigger": false, "expected_source": null}
+```
+
+**Metrics**
 
 | Metric | 기준 | 설명 | 엔진 |
 |---|---|---|---|
@@ -209,19 +225,7 @@ bash eval/run.sh --skip-ragas  # 빠른 평가 (ragas 생략)
 | `answer_relevancy` | ≥ 0.7 | angel_message가 쿼리에 실제로 답하는지 | ragas |
 | `faithfulness` | ≥ 0.7 | angel_message가 검색 문서 내용에 충실한지 | ragas |
 
-**ragas**는 RAG 파이프라인 평가 프레임워크예요. `answer_relevancy`와 `faithfulness`는 Claude Haiku를 사용해 채점하므로 실행마다 소량의 API 비용이 발생해요.
-
-- `answer_relevancy`: ragas가 angel_message로부터 질문을 역생성하고, 원래 쿼리와 임베딩 유사도를 비교해요. 점수가 낮으면 "뜬금없는" 메시지를 잡아낼 수 있어요.
-- `faithfulness`: angel_message의 주장이 검색된 노트 내용에서 실제로 뒷받침되는지 확인해요. 점수가 낮으면 메시지가 근거 없이 생성됐다는 신호예요.
-
-결과는 `eval/results/YYYY-MM-DD_HHMMSS.json`에 저장돼요. 기준을 벗어나면 exit 1을 반환해요.
-
-케이스를 추가하려면 `eval/cases.jsonl`에 한 줄씩 추가해요.
-
-```json
-{"query": "질문 내용", "should_trigger": true, "expected_source": "노트파일.md"}
-{"query": "관련 없는 질문", "should_trigger": false, "expected_source": null}
-```
+`answer_relevancy`와 `faithfulness`는 Claude Haiku로 채점하므로 실행마다 소량의 API 비용이 발생해요. 결과는 `eval/results/YYYY-MM-DD_HHMMSS.json`에 저장돼요. 기준을 벗어나면 exit 1을 반환해요.
 
 ---
 
