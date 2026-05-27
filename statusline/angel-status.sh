@@ -138,12 +138,11 @@ GAP_W=3
 MARGIN=8
 CLAUDE_OFFSET=3   # Claude Code prepends 3 spaces of its own padding per line
 
-TEXT_W_MAX=26
-TEXT_W_MIN=20
+TEXT_W_FIXED=34
 SAFE_MARGIN=12
 AVAIL=$(( COLS - ART_W - GAP_W - MARGIN - CLAUDE_OFFSET - SAFE_MARGIN ))  # keep extra slack for Claude's own padding/clipping
 [ "$AVAIL" -lt 20 ] && AVAIL=20
-TEXT_W=$EMOTE_W
+TEXT_W=$TEXT_W_FIXED
 MSG_TEXT=""
 if [ "$SHOW_MSG" -eq 1 ]; then
     MSG_TEXT=$(printf '%s' "$MESSAGE" | python3 -c "
@@ -154,8 +153,6 @@ s = re.sub(r'\s+', ' ', s).strip()
 print(s)
 ")
 fi
-[ "$TEXT_W" -lt "$TEXT_W_MIN" ] && TEXT_W=$TEXT_W_MIN
-[ "$TEXT_W" -gt "$TEXT_W_MAX" ] && TEXT_W=$TEXT_W_MAX
 [ "$TEXT_W" -gt "$AVAIL" ] && TEXT_W=$AVAIL
 
 # ─── Message & meta ──────────────────────────────────────────────────────────
@@ -217,9 +214,6 @@ for line in (vwrap(msg, W) if msg.strip() else []):
 print('bot\t'   + dashes)
 if meta.strip():
     m = meta.strip()
-    max_w = W + 2
-    if vis_len(m) > max_w:
-        m = vtrunc(m, max_w - 1) + '…'
     print('meta\t' + m)
 ")
 
@@ -236,7 +230,7 @@ MAX_LINES=$(( BUBBLE_COUNT > ART_COUNT ? BUBBLE_COUNT : ART_COUNT ))
 # ─── Right-align ─────────────────────────────────────────────────────────────
 # Bubble outer width = TEXT_W + 4  (╭ + space + content + space + ╮)
 TOTAL_W=$(( ART_W + GAP_W + TEXT_W + 4 ))
-PAD=$(( COLS - TOTAL_W - MARGIN - CLAUDE_OFFSET ))
+PAD=$(( COLS - TOTAL_W - MARGIN - CLAUDE_OFFSET - 6 ))
 [ "$PAD" -lt 0 ] && PAD=0
 SP=$(printf '%*s' "$PAD" '')
 GAP=$(printf '%*s' "$GAP_W" '')
@@ -272,7 +266,7 @@ done
 
 # Meta line below bubble, aligned with bubble left border
 if [ -n "$META_LINE" ]; then
-    META_INDENT=$(printf '%*s' $(( ART_W + GAP_W )) '')
+    META_INDENT=$(printf '%*s' $(( ART_W + GAP_W + 2 )) '')
     printf '%s%s%s%s%s\n' "$SP" "$META_INDENT" "${GRAY}" "$META_LINE" "${NC}"
 fi
 

@@ -84,13 +84,13 @@ else
     #    ꒰ঌ ♡ ໒꒱
     #      ╲╱
     #    ☁︎ ⋆ ☁︎
-    HALO_LINE="${NC}   ${LAVENDER}˚₊‧꒰ა${NC} ${GOLD}𓂋${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
-    EARS_LINE="${NC}        ${SKIN}/)  /)${NC}"
-    FACE_LINE="${NC}     ${SKIN}૮(˶• ֊ •˶)ა${NC}"
-    BLINK_LINE="${NC}     ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
-    ITEM="${PINK}♡${NC}"; ITEM_LEAD="      "
-    FEET="${NC}         ${WHITE}╲╱${NC}"
-    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="        "
+    HALO_LINE="${NC} ${LAVENDER}˚₊‧꒰ა${NC} ${GOLD}𓂋${NC} ${LAVENDER}໒꒱‧₊˚${NC}"
+    EARS_LINE="${NC}      ${SKIN}/)  /)${NC}"
+    FACE_LINE="${NC}   ${SKIN}૮(˶• ֊ •˶)ა${NC}"
+    BLINK_LINE="${NC}   ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
+    ITEM="${PINK}♡${NC}"; ITEM_LEAD="    "
+    FEET="${NC}       ${WHITE}╲╱${NC}"
+    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="      "
 fi
 
 [ "$BLINK" -lt 2 ] && FACE_LINE="$BLINK_LINE"
