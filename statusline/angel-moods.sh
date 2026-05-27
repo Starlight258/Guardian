@@ -47,7 +47,7 @@ if [ "$MOOD" = "$MOOD_HAPPY" ] || [ "$MOOD" = "$MOOD_EXCITED" ]; then
     BLINK_LINE="${NC}  ${SKIN}૮(${GOLD}˶˘ᗜ˘˶)ﾉﾞ${SKIN}ა${NC}"
     ITEM="${PINK}♡${NC}"; ITEM_LEAD="  "
     FEET="${NC}     ${WHITE}╲╱${NC}"
-    DECO="${GOLD}⋆${NC}"; DECO_LEAD="    "
+    DECO="${GOLD}⋆${NC}"; DECO_LEAD="     "
 elif [ "$MOOD" = "$MOOD_TIRED" ]; then
     #  ˚₊‧꒰ა ☾ ໒꒱‧₊˚
     #     /)  /)
@@ -61,7 +61,7 @@ elif [ "$MOOD" = "$MOOD_TIRED" ]; then
     BLINK_LINE="${NC}     ${SKIN}૮(${GRAY} ˘ ﹃ ˘ ${SKIN})ა${NC}"
     ITEM="${PINK}✧${NC}"; ITEM_LEAD="      "
     FEET="${NC}         ${WHITE}╲╱${NC}"
-    DECO="${GRAY}♡${NC}"; DECO_LEAD="       "
+    DECO="${GRAY}♡${NC}"; DECO_LEAD="        "
 elif [ "$MOOD" = "$MOOD_THINKING" ]; then
     #  ˚₊‧꒰ა ✦ ໒꒱‧₊˚
     #     /)  /)
@@ -75,7 +75,7 @@ elif [ "$MOOD" = "$MOOD_THINKING" ]; then
     BLINK_LINE="${NC}     ${SKIN}૮(𐔌•̀ ᎑-՞𐦯)ა${NC}"
     ITEM="${LAVENDER}✦${NC}"; ITEM_LEAD="      "
     FEET="${NC}         ${WHITE}╲╱${NC}"
-    DECO="${PURPLE}⊹${NC}"; DECO_LEAD="      "
+    DECO="${PURPLE}⊹${NC}"; DECO_LEAD="       "
 else
     # focused / default
     #  ˚₊‧꒰ა 𓂋 ໒꒱‧₊˚
@@ -90,7 +90,7 @@ else
     BLINK_LINE="${NC}     ${SKIN}૮(˶˘ ֊ ˘˶)ა${NC}"
     ITEM="${PINK}♡${NC}"; ITEM_LEAD="      "
     FEET="${NC}         ${WHITE}╲╱${NC}"
-    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="       "
+    DECO="${LAVENDER}⋆${NC}"; DECO_LEAD="        "
 fi
 
 [ "$BLINK" -lt 2 ] && FACE_LINE="$BLINK_LINE"
