@@ -1,0 +1,47 @@
+statusline/angel-status.sh
+  s_4c801e58bd6aac::t_bee3b6706e083a 147-156,192
+  s_4c801e58bd6aac::t_27879c9aa43b40 101-105,112-113
+  s_4c801e58bd6aac::t_4453b3ac2bd9dc 170-172,174,226-231
+  s_4c801e58bd6aac::t_f5a02e34e5efb3 238,254,270
+  s_4c801e58bd6aac::t_32ccd4239a63f4 141-143
+  s_4c801e58bd6aac::t_b7725f61c16e2b 250
+  s_4c801e58bd6aac::t_2fdad1ab177ada 175
+  s_4c801e58bd6aac::t_262d414533d992 108-111,128-129
+  s_4c801e58bd6aac::t_d8bc021972e1d8 274
+  s_4c801e58bd6aac::t_9b0b5bffe56bdf 89-91,95-96,146,157-159
+  s_4c801e58bd6aac::t_e56b38a597f116 144
+  s_4c801e58bd6aac::t_6713dc9c27d5ac 92-94,106-107,125-127,179
+  s_4c801e58bd6aac::t_24d7edd1f3c652 263
+  s_ee23d8a3b6217e::t_e8750433636d5b 4-10,80-88,133,135-137,139,145,161-162,168,180-191,195-197,199,203,207-217,233-234,236-237,242,244,246,253,255-258,260-261,269,271-273
+  s_4c801e58bd6aac::t_46c24b872d8b55 138
+  s_4c801e58bd6aac::t_94a1df2f1c87da 259
+  s_ee23d8a3b6217e::t_8506ee6f213890 219-223
+statusline/angel-moods.sh
+  s_4c801e58bd6aac::t_cc9a500febcf60 50
+  s_4c801e58bd6aac::t_8754231250e4c5 93
+  s_4c801e58bd6aac::t_19975e69b16ccc 64,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3d62c16541ce7d698f7c462eb21eb396881bfd07",
+  "prompts": {},
+  "sessions": {
+    "s_4c801e58bd6aac": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e6899-724a-7df1-9af2-e839365f2e25",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    },
+    "s_ee23d8a3b6217e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d35ca6d-e181-476c-a588-6324211cbe0c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
