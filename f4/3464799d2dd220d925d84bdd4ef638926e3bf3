@@ -1,0 +1,21 @@
+eval/run.sh
+  s_13ec7fb409369b::t_ab9f9063561a7e 1-6
+README.md
+  s_13ec7fb409369b::t_3ab213a5a88f51 199-200,203,205-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f43464799d2dd220d925d84bdd4ef638926e3bf3",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
