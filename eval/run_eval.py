@@ -174,9 +174,15 @@ def compute_ragas_metrics(results: list[CaseResult]) -> dict[str, float]:
         embeddings=embeddings,
         show_progress=False,
     )
+    def _mean(val) -> float:
+        if isinstance(val, list):
+            valid = [v for v in val if v is not None]
+            return sum(valid) / len(valid) if valid else 0.0
+        return float(val)
+
     return {
-        "answer_relevancy": round(float(result["answer_relevancy"]), 3),
-        "faithfulness": round(float(result["faithfulness"]), 3),
+        "answer_relevancy": round(_mean(result["answer_relevancy"]), 3),
+        "faithfulness": round(_mean(result["faithfulness"]), 3),
     }
 
 
