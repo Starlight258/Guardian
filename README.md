@@ -1,7 +1,7 @@
 # Guardian
 
 <p align="center">
-  <img src="./assets/guardian-cli-angel-terminal-animated.png" width="920" alt="Guardian CLI Angel" />
+  <img src="./assets/screenshot.jpeg" width="920" alt="Guardian Angel — Claude Code status line" />
 </p>
 
 <p align="center">
