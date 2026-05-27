@@ -71,6 +71,7 @@ def _write_angel_state(
 
 RECALL_TOP_K = 5
 RECALL_RELEVANCE_THRESHOLD = 0.5
+QUERY_REWRITE_THRESHOLD = 80  # chars — longer queries get LLM rewrite
 RECALL_ANGEL_MESSAGE_MAX_LENGTH = 120
 RECALL_MAX_EVIDENCE_ITEMS = 10
 RECALL_DROP_REASON_NO_CONTEXT = "missing_context"
@@ -78,6 +79,38 @@ RECALL_DROP_REASON_NO_RESULTS = "no_retrieval_results"
 RECALL_DROP_REASON_INVALID_TOOL_USE = "invalid_tool_use"
 RECALL_DROP_REASON_LOW_SCORE = "below_threshold"
 RECALL_DROP_REASON_EMPTY_CHUNK_IDS = "empty_chunk_ids"
+
+
+def _clean_query(text: str) -> str:
+    """Deterministic noise reduction: strip repeated chars, normalize whitespace, truncate."""
+    import re
+    text = re.sub(r'(.)\1{3,}', r'\1', text)   # xxxxxxxx → x
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text[:150]
+
+
+def _rewrite_query(text: str) -> str:
+    """LLM rewrite to extract core technical intent. Falls back to input on any error."""
+    import os
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=80,
+            messages=[{
+                "role": "user",
+                "content": (
+                    "다음 텍스트에서 기술적 핵심 의도만 한 문장으로 추출해줘. "
+                    "감탄사, 반복 문자, 일상 표현은 제거하고 한국어로.\n\n"
+                    f"{text}"
+                ),
+            }],
+        )
+        rewritten = response.content[0].text.strip()
+        return rewritten if rewritten else text
+    except Exception:
+        return text
 
 
 @dataclass(frozen=True)
@@ -496,7 +529,10 @@ class RecallAgent:
     ) -> list[RecallEvidence]:
         # 벡터 검색으로 직접 매칭을 찾고, 그래프 이웃으로 컨텍스트를
         # MAX_EVIDENCE_ITEMS까지 확장한다.
-        embedding = self.graph_service.embedder.embed(context.text)
+        search_text = _clean_query(context.text)
+        if len(search_text) > QUERY_REWRITE_THRESHOLD:
+            search_text = _rewrite_query(search_text)
+        embedding = self.graph_service.embedder.embed(search_text)
         candidates = self.graph_service.vector_store.query_similar(embedding, limit=self.top_k)
 
         evidence_by_id: dict[str, RecallEvidence] = {}
