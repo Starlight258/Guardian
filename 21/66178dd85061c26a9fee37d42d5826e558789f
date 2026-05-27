@@ -1,0 +1,24 @@
+eval/generate_cases.py
+  s_13ec7fb409369b::t_eb1f90fcb55000 1-76,78-170
+  s_13ec7fb409369b::t_1db45823e23a8d 77
+eval/run.sh
+  s_13ec7fb409369b::t_f420041a5169be 2-8,12-29
+.gitignore
+  s_13ec7fb409369b::t_b7f11ea1ec4842 224,226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2166178dd85061c26a9fee37d42d5826e558789f",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
