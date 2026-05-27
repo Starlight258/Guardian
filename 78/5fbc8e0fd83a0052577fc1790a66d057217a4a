@@ -1,0 +1,30 @@
+statusline/angel-status.sh
+  s_4c801e58bd6aac::t_0d3fda3a0f4e3d 141
+  s_13ec7fb409369b::t_6aaa509c789abe 269
+  s_4c801e58bd6aac::t_3cf16d554e1ac0 233
+  s_4c801e58bd6aac::t_0cc39a161d0b3d 145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "785fbc8e0fd83a0052577fc1790a66d057217a4a",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    },
+    "s_4c801e58bd6aac": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e6899-724a-7df1-9af2-e839365f2e25",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
