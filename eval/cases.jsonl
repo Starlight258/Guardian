@@ -1,0 +1,7 @@
+{"query": "LLM 프롬프팅 모델별 차이점", "should_trigger": true, "expected_source": "llm-prompting-guide.md"}
+{"query": "RAG 구현 어떻게 해", "should_trigger": true, "expected_source": "RAG.md"}
+{"query": "AI 코딩 워크플로우 정리", "should_trigger": true, "expected_source": "ai-workflow.md"}
+{"query": "MCP 서버 만드는 법", "should_trigger": true, "expected_source": "MCP-FastMCP-입문.md"}
+{"query": "오늘 점심 뭐 먹을까", "should_trigger": false, "expected_source": null}
+{"query": "버스 몇 시에 와", "should_trigger": false, "expected_source": null}
+{"query": "내일 날씨 알려줘", "should_trigger": false, "expected_source": null}

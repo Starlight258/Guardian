@@ -193,6 +193,30 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 
 ---
 
+## Evaluation
+
+```bash
+uv run python eval/run_eval.py
+```
+
+`eval/cases.jsonl`에 정의된 케이스를 실행하고 두 가지 메트릭을 측정해요.
+
+| Metric | 기준 | 설명 |
+|---|---|---|
+| `context_precision` | ≥ 0.6 | expected_source가 실제 검색 결과에 포함된 비율 |
+| `false_positive_rate` | ≤ 0.30 | 트리거되면 안 되는 쿼리에서 Angel이 발동된 비율 |
+
+결과는 `eval/results/YYYY-MM-DD_HHMMSS.json`에 저장돼요. 기준을 벗어나면 exit 1을 반환해요.
+
+케이스를 추가하려면 `eval/cases.jsonl`에 한 줄씩 추가해요.
+
+```json
+{"query": "질문 내용", "should_trigger": true, "expected_source": "노트파일.md"}
+{"query": "관련 없는 질문", "should_trigger": false, "expected_source": null}
+```
+
+---
+
 ## Roadmap
 
 | Status | Milestone |
