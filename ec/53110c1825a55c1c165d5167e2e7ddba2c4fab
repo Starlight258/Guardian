@@ -1,0 +1,22 @@
+eval/cases.jsonl
+  s_13ec7fb409369b::t_e9b0abd4cf424c 1-8
+eval/run_eval.py
+  s_13ec7fb409369b::t_51bd56fbc57356 29-31
+  s_13ec7fb409369b::t_dd38f19a66faa3 1-28,32-224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ec53110c1825a55c1c165d5167e2e7ddba2c4fab",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
