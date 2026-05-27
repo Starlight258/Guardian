@@ -201,7 +201,8 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 | Done | Knowledge graph dashboard |
 | Done | Recall Agent + Guardrails |
 | Done | FastMCP recall tool |
-| Next | LLM resilience layer |
+| Done | LLM resilience layer (Circuit Breaker → Ollama → Heuristic fallback) |
+| Done | Angel status line (Claude Code statusLine integration) |
 | Next | RAGAS evaluation loop |
 
 ---
