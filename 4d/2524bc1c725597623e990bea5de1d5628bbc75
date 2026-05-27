@@ -1,0 +1,21 @@
+statusline/angel-status.sh
+  s_4c801e58bd6aac::t_00e5483091c8ec 257-260,267
+statusline/angel-moods.sh
+  s_4c801e58bd6aac::t_e2f9c47ef6bf1f 38-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4d2524bc1c725597623e990bea5de1d5628bbc75",
+  "prompts": {},
+  "sessions": {
+    "s_4c801e58bd6aac": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e6899-724a-7df1-9af2-e839365f2e25",
+        "model": "gpt-5.4-mini"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
