@@ -177,8 +177,9 @@ flowchart LR
 
 **Guardrails**: 관련성 점수가 threshold 아래면 Angel을 silent drop해요.
 
-> LLM 기반 query rewrite와 multi-agent 구조는 채택하지 않았어요.
-Angel은 백그라운드 트리거라 지연이 길어지면 안 되기 때문이에요.
+**Query cleaning**: 검색 전에 쿼리를 한 번 정리해요. 반복 문자와 공백을 정리하고, 긴/노이즈 쿼리는 기술 의도만 남기도록 한 번 더 rewrite해요.
+
+Angel은 백그라운드 트리거라 지연이 길어지면 안 되기 때문에, rewrite는 긴 쿼리에서만 제한적으로 써요.
 RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 분리해요.
 
 ---
@@ -240,6 +241,7 @@ bash eval/run.sh --generate --skip-ragas
 | Done | LLM resilience layer (Circuit Breaker → Ollama → Heuristic fallback) |
 | Done | Angel status line (Claude Code statusLine integration) |
 | Done | RAGAS evaluation loop |
+| In progress | Angel status line layout tuning |
 
 ---
 
@@ -252,7 +254,7 @@ bash eval/run.sh --generate --skip-ragas
 ## Status
 
 ```text
-Status: Core capture, recall, dashboard, and MCP recall tool implemented
+Status: Core capture, recall, dashboard, and MCP recall tool implemented. Angel status line layout is still being tuned through daily use.
 ```
 
 ---
