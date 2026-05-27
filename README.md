@@ -227,7 +227,7 @@ uv run python eval/run_eval.py
 | Done | FastMCP recall tool |
 | Done | LLM resilience layer (Circuit Breaker → Ollama → Heuristic fallback) |
 | Done | Angel status line (Claude Code statusLine integration) |
-| Next | RAGAS evaluation loop |
+| Done | RAGAS evaluation loop |
 
 ---
 
