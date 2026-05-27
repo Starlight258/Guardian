@@ -594,7 +594,12 @@ class RecallAgent:
                 "Return JSON for angel_output with:",
                 "- chunk_ids: selected chunk ids",
                 "- evidence_sources: source ids used",
-                "- relevance_score: 0.0 to 1.0",
+                "- relevance_score: 0.0–1.0. Be strict:"
+                " 0.8+ only when the evidence directly and specifically answers the query."
+                " 0.5–0.7 for partial relevance."
+                " Below 0.5 when the connection is tangential, coincidental, or"
+                " topic-adjacent only."
+                " When in doubt, score lower — a missed trigger is better than a false one.",
                 f"- angel_message: max {RECALL_ANGEL_MESSAGE_MAX_LENGTH} chars."
                 " Pull ONE specific fact, comparison, or decision point directly"
                 " from the note text that the user might actually need right now."
