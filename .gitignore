@@ -221,8 +221,9 @@ instance/
 .env
 .entire/
 
-# Eval results (generated on each run)
+# Eval artifacts (generated on each run)
 eval/results/
+eval/generated_cases.jsonl
 
 # Scrapy stuff:
 .scrapy
