@@ -222,7 +222,7 @@ bash eval/run.sh --generate --skip-ragas
 |---|---|---|---|
 | `context_precision` | ≥ 0.6 | expected_source가 실제 검색 결과에 포함된 비율 | 직접 구현 |
 | `false_positive_rate` | ≤ 0.30 | 트리거되면 안 되는 쿼리에서 Angel이 발동된 비율 | 직접 구현 |
-| `answer_relevancy` | ≥ 0.6 | angel_message가 쿼리에 실제로 답하는지 | ragas |
+| `answer_relevancy` | 참고용 | angel_message가 쿼리에 실제로 답하는지 | ragas |
 | `faithfulness` | ≥ 0.7 | angel_message가 검색 문서 내용에 충실한지 | ragas |
 
 `answer_relevancy`와 `faithfulness`는 Claude Haiku로 채점하므로 실행마다 소량의 API 비용이 발생해요. 결과는 `eval/results/YYYY-MM-DD_HHMMSS.json`에 저장돼요. 기준을 벗어나면 exit 1을 반환해요.

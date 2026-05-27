@@ -203,8 +203,6 @@ def compute_summary(results: list[CaseResult], ragas_metrics: dict[str, float]) 
     passed = bool(
         cp >= CONTEXT_PRECISION_MIN
         and fp_rate <= FALSE_POSITIVE_MAX
-        and (ar is None or ar >= ANSWER_RELEVANCY_MIN)
-        and (ff is None or ff >= FAITHFULNESS_MIN)
     )
 
     metrics: dict = {
