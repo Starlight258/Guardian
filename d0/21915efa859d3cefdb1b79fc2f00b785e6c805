@@ -1,0 +1,19 @@
+eval/run_eval.py
+  s_13ec7fb409369b::t_bad7d60d3ea554 203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d021915efa859d3cefdb1b79fc2f00b785e6c805",
+  "prompts": {},
+  "sessions": {
+    "s_13ec7fb409369b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d757f54c-32b1-451e-9bab-dbf9d4e88f8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mint <audwl03071@gmail.com>"
+    }
+  }
+}
