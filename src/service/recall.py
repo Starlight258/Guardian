@@ -470,11 +470,12 @@ class RecallAgent:
                 angel_message=None,
             )
 
-        _write_angel_state(
-            final_message,
-            evidence=retrieved_evidence,
-            recall_count=len(chunk_ids),
-        )
+        if self.persist_angel_message:
+            _write_angel_state(
+                final_message,
+                evidence=retrieved_evidence,
+                recall_count=len(chunk_ids),
+            )
         return self._save_result(
             session,
             input_hash=input_hash,
@@ -666,7 +667,7 @@ class RecallAgent:
         drop_reason: str | None,
         angel_message: str | None,
     ) -> RecallResult:
-        stored_message = angel_message if (angel_triggered and self.persist_angel_message) else None
+        stored_message = angel_message if angel_triggered else None
         log = RecallLog(
             input_hash=input_hash,
             retrieved_chunk_ids=retrieved_chunk_ids,
