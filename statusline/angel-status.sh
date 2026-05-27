@@ -254,13 +254,17 @@ for (( i=0; i<MAX_LINES; i++ )); do
     if [ $i -lt $BUBBLE_COUNT ]; then
         btype="${BUBBLE_TYPES[$i]}"
         bcontent="${BUBBLE_LINES[$i]}"
+        ROW_GAP="$GAP"
+        if [ $i -eq $((ART_COUNT - 1)) ]; then
+            ROW_GAP="${GAP} "
+        fi
         case "$btype" in
             top)   BCOL="${LAVENDER}╭${bcontent}╮${NC}" ;;
             bot)   BCOL="${LAVENDER}╰${bcontent}╯${NC}" ;;
             emote) BCOL="${LAVENDER}│${NC} ${PINK}${DIM}${bcontent}${NC} ${LAVENDER}│${NC}" ;;
             msg)   BCOL="${LAVENDER}│${NC} ${DIM}${bcontent}${NC} ${LAVENDER}│${NC}" ;;
         esac
-        printf '%s%s%s%s\n' "$SP" "$ART_COL" "$GAP" "$BCOL"
+        printf '%s%s%s%s\n' "$SP" "$ART_COL" "$ROW_GAP" "$BCOL"
     else
         printf '%s%s\n' "$SP" "$ART_COL"
     fi

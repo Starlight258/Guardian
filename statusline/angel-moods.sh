@@ -35,18 +35,18 @@ BLINK=$(( NOW % 8 ))
 
 # ── Mood-based art ────────────────────────────────────────────────────────
 if [ "$MOOD" = "$MOOD_HAPPY" ] || [ "$MOOD" = "$MOOD_EXCITED" ]; then
-    #   ˚₊‧✧‧₊˚           ← 2-space lead
-    #    /)  /)            ← 4-space lead
-    #  ૮(˶ᵔᗜᵔ˶)ﾉﾞა       ← 2-space lead (wide arm)
-    #   ꒰ঌ ♡ ໒꒱           ← 3-space lead
-    #     ╲╱              ← 6-space lead
-    #   ☁︎ ⋆ ☁︎            ← 3-space lead
-    HALO_LINE="${NC}   ${LAVENDER}˚₊‧${GOLD}✧${LAVENDER}‧₊˚${NC}"
-    EARS_LINE="${NC}    ${SKIN}/)  /)${NC}"
-    FACE_LINE="${NC}  ${SKIN}૮(${GOLD}˶ᵔᗜᵔ˶)ﾉﾞ${SKIN}ა${NC}"
-    BLINK_LINE="${NC}  ${SKIN}૮(${GOLD}˶˘ᗜ˘˶)ﾉﾞ${SKIN}ა${NC}"
-    ITEM="${PINK}♡${NC}"; ITEM_LEAD="  "
-    FEET="${NC}     ${WHITE}╲╱${NC}"
+    #   ˚₊‧✧‧₊˚           ← 3-space lead
+    #    /)  /)            ← 5-space lead
+    #  ૮(˶ᵔᗜᵔ˶)ﾉﾞა       ← 3-space lead (wide arm)
+    #   ꒰ঌ ♡ ໒꒱           ← 4-space lead
+    #     ╲╱              ← 7-space lead
+    #   ☁︎ ⋆ ☁︎            ← 4-space lead
+    HALO_LINE="${NC}    ${LAVENDER}˚₊‧${GOLD}✧${LAVENDER}‧₊˚${NC}"
+    EARS_LINE="${NC}     ${SKIN}/)  /)${NC}"
+    FACE_LINE="${NC}   ${SKIN}૮(${GOLD}˶ᵔᗜᵔ˶)ﾉﾞ${SKIN}ა${NC}"
+    BLINK_LINE="${NC}   ${SKIN}૮(${GOLD}˶˘ᗜ˘˶)ﾉﾞ${SKIN}ა${NC}"
+    ITEM="${PINK}♡${NC}"; ITEM_LEAD="   "
+    FEET="${NC}      ${WHITE}╲╱${NC}"
     DECO="${GOLD}⋆${NC}"; DECO_LEAD="     "
 elif [ "$MOOD" = "$MOOD_TIRED" ]; then
     #  ˚₊‧꒰ა ☾ ໒꒱‧₊˚
