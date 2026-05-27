@@ -200,7 +200,7 @@ def compute_summary(results: list[CaseResult], ragas_metrics: dict[str, float]) 
     ar = ragas_metrics.get("answer_relevancy")
     ff = ragas_metrics.get("faithfulness")
 
-    passed = (
+    passed = bool(
         cp >= CONTEXT_PRECISION_MIN
         and fp_rate <= FALSE_POSITIVE_MAX
         and (ar is None or ar >= ANSWER_RELEVANCY_MIN)
