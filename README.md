@@ -196,15 +196,23 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 ## Evaluation
 
 ```bash
-uv run python eval/run_eval.py
+bash eval/run.sh            # 전체 평가 (ragas 포함)
+bash eval/run.sh --skip-ragas  # 빠른 평가 (ragas 생략)
 ```
 
-`eval/cases.jsonl`에 정의된 케이스를 실행하고 두 가지 메트릭을 측정해요.
+`eval/cases.jsonl`에 정의된 케이스를 실행하고 네 가지 메트릭을 측정해요.
 
-| Metric | 기준 | 설명 |
-|---|---|---|
-| `context_precision` | ≥ 0.6 | expected_source가 실제 검색 결과에 포함된 비율 |
-| `false_positive_rate` | ≤ 0.30 | 트리거되면 안 되는 쿼리에서 Angel이 발동된 비율 |
+| Metric | 기준 | 설명 | 엔진 |
+|---|---|---|---|
+| `context_precision` | ≥ 0.6 | expected_source가 실제 검색 결과에 포함된 비율 | 직접 구현 |
+| `false_positive_rate` | ≤ 0.30 | 트리거되면 안 되는 쿼리에서 Angel이 발동된 비율 | 직접 구현 |
+| `answer_relevancy` | ≥ 0.7 | angel_message가 쿼리에 실제로 답하는지 | ragas |
+| `faithfulness` | ≥ 0.7 | angel_message가 검색 문서 내용에 충실한지 | ragas |
+
+**ragas**는 RAG 파이프라인 평가 프레임워크예요. `answer_relevancy`와 `faithfulness`는 Claude Haiku를 사용해 채점하므로 실행마다 소량의 API 비용이 발생해요.
+
+- `answer_relevancy`: ragas가 angel_message로부터 질문을 역생성하고, 원래 쿼리와 임베딩 유사도를 비교해요. 점수가 낮으면 "뜬금없는" 메시지를 잡아낼 수 있어요.
+- `faithfulness`: angel_message의 주장이 검색된 노트 내용에서 실제로 뒷받침되는지 확인해요. 점수가 낮으면 메시지가 근거 없이 생성됐다는 신호예요.
 
 결과는 `eval/results/YYYY-MM-DD_HHMMSS.json`에 저장돼요. 기준을 벗어나면 exit 1을 반환해요.
 
