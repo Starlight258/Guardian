@@ -221,6 +221,9 @@ instance/
 .env
 .entire/
 
+# Eval results (generated on each run)
+eval/results/
+
 # Scrapy stuff:
 .scrapy
 
