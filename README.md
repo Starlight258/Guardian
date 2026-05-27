@@ -1,7 +1,7 @@
 # Guardian
 
 <p align="center">
-  <img src="./assets/screenshot.jpeg" width="920" alt="Guardian Angel — Claude Code status line" />
+  <img src="https://github.com/user-attachments/assets/d50eb81b-d468-41e6-b310-622dc15dabd4" width="920" alt="Guardian Angel — Claude Code status line" />
 </p>
 
 <p align="center">
