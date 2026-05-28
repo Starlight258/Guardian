@@ -43,10 +43,12 @@ def _write_angel_state(
 
         source_title = None
         source_file = None
+        source_path = None
         if evidence:
             first = evidence[0]
             source_title = first.title
             source_file = Path(first.path).name if first.path else None
+            source_path = first.path if first.path else None
 
         now = int(time.time())
         try:
@@ -61,6 +63,7 @@ def _write_angel_state(
             "mood_ts": now,
             "source_title": source_title,
             "source_file": source_file,
+            "source_path": source_path,
             "recall_count": (existing.get("recall_count") or 0) + 1,
             "last_recall_ts": now,
         })

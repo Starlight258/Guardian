@@ -32,6 +32,7 @@ MESSAGE=$(jq -r '.message // ""' "$STATE" 2>/dev/null)
 MSG_TS=$(jq -r '.message_ts // 0' "$STATE" 2>/dev/null)
 MSG_TTL=$(jq -r '.message_ttl // 60' "$STATE" 2>/dev/null)
 SOURCE_FILE=$(jq -r '.source_file // ""' "$STATE" 2>/dev/null)
+SOURCE_PATH=$(jq -r '.source_path // ""' "$STATE" 2>/dev/null)
 RECALL_COUNT=$(jq -r '.recall_count // 0' "$STATE" 2>/dev/null)
 LAST_RECALL_TS=$(jq -r '.last_recall_ts // 0' "$STATE" 2>/dev/null)
 GUARDIAN_ACTIVE=$(jq -r '.guardian_active // true' "$STATE" 2>/dev/null)
@@ -267,6 +268,13 @@ done
 # Meta line below bubble, aligned with bubble left border
 if [ -n "$META_LINE" ]; then
     META_INDENT=$(printf '%*s' $(( ART_W + GAP_W + 2 )) '')
+    # Wrap source_file in OSC 8 hyperlink if full path is available
+    if [ -n "$SOURCE_PATH" ] && [ "$SOURCE_PATH" != "null" ] && [ -n "$SOURCE_FILE" ] && [ "$SOURCE_FILE" != "null" ]; then
+        ENCODED_PATH=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$SOURCE_PATH" 2>/dev/null)
+        OBSIDIAN_URL="http://localhost:8000/open?path=${ENCODED_PATH}"
+        LINKED_FILE=$'\033]8;;'"${OBSIDIAN_URL}"$'\033\\'"${SOURCE_FILE}"$'\033]8;;\033\\'
+        META_LINE="${META_LINE/$SOURCE_FILE/$LINKED_FILE}"
+    fi
     printf '%s%s%s%s%s\n' "$SP" "$META_INDENT" "${GRAY}" "$META_LINE" "${NC}"
 fi
 

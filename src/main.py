@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
 from src.api.admin import router as admin_router
 from src.api.events import router as events_router
@@ -58,3 +59,10 @@ app.include_router(recall_router)
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/open")
+def open_in_obsidian(path: str) -> RedirectResponse:
+    import urllib.parse
+    obsidian_url = f"obsidian://open?path={urllib.parse.quote(path)}"
+    return RedirectResponse(url=obsidian_url, status_code=302)
