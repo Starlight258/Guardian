@@ -182,6 +182,14 @@ flowchart LR
 Angel은 백그라운드 트리거라 지연이 길어지면 안 되기 때문에, rewrite는 긴 쿼리에서만 제한적으로 써요.
 RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 30%를 넘으면 분리해요.
 
+**LLM Resilience**: Circuit Breaker가 CLOSED → OPEN(3회 연속 실패) → HALF_OPEN(60초 후) → CLOSED 순으로 전환해요. 5xx 오류, 연결 오류, 타임아웃만 폴백을 트리거하고, 4xx(인증 오류, 할당량 초과)는 그대로 raise해요. `GUARDIAN_LLM_PROVIDER=local`로 설정하면 Anthropic 없이 바로 Ollama를 사용해요.
+
+**Startup Reindex**: 서버 시작 시 Obsidian 볼트 전체를 스캔해요. `file_mtime`을 캐싱해서 변경된 파일만 재처리하는 incremental 방식이에요. 진행 상황은 `GET /admin/reindex/status`로 확인할 수 있어요.
+
+**Prompt filter + Checkpoint dedup**: 최소 길이 미만 프롬프트는 Recall을 트리거하지 않아요. 세션 체크포인트는 내용이 동일하면 저장을 건너뛰고 `"status": "deduped"`를 반환해요.
+
+**`/open` redirect**: Angel이 statusline에 표시하는 노트 링크는 Guardian의 `/open` 엔드포인트를 경유해요. `obsidian://` 링크를 안전하게 라우팅해요.
+
 ---
 
 ## Data Sources
@@ -191,6 +199,8 @@ RAGAS context precision이 0.6 아래로 떨어지거나 false positive rate가 
 | Obsidian notes | `watchdog` filesystem watcher |
 | Session checkpoints | session-end hook → rule-based summary |
 | Claude Code / Codex prompt events | `UserPromptSubmit` hook → realtime recall trigger |
+
+파일 이벤트는 300ms debounce를 거쳐 빠른 연속 수정을 한 번만 처리해요. 파일 이동(rename)도 처리해서 이전 경로의 데이터를 새 경로로 마이그레이션해요.
 
 ---
 
