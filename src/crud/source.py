@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
@@ -15,6 +16,8 @@ OBSIDIAN_SOURCE_TYPE = "obsidian_note"
 SESSION_CHECKPOINT_SOURCE_TYPE = "session_checkpoint"
 CHECKPOINT_CHUNK_TOKENS = 512
 CHECKPOINT_CHUNK_OVERLAP_RATIO = 0.2
+
+_MARKDOWN_HEADER_PATTERN = re.compile(r"^#{1,6} .+$", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -72,7 +75,7 @@ def upsert_obsidian_note_source(
         source.title = path.stem
         source.content_hash = content_hash
 
-    chunks = _build_chunks(source_id=source.id, texts=[content])
+    chunks = _build_chunks(source_id=source.id, texts=split_markdown_content(content))
     deleted_chunk_ids = replace_source_chunks(
         session,
         source_id=source.id,
@@ -84,6 +87,77 @@ def upsert_obsidian_note_source(
         deleted_chunk_ids=deleted_chunk_ids,
         changed=True,
     )
+
+
+def split_markdown_content(content: str) -> list[str]:
+    """헤더 단위로 섹션을 나누고, 512단어를 넘는 섹션만 슬라이딩 윈도우로 추가 분할한다."""
+    headers = list(_MARKDOWN_HEADER_PATTERN.finditer(content))
+    if not headers:
+        return split_session_checkpoint_content(content)
+
+    sections: list[str] = []
+    if headers[0].start() > 0:
+        sections.append(content[: headers[0].start()])
+    for index, header in enumerate(headers):
+        end = headers[index + 1].start() if index + 1 < len(headers) else len(content)
+        sections.append(content[header.start() : end])
+
+    chunks: list[str] = []
+    for section in sections:
+        section = section.strip("\n")
+        if not section:
+            continue
+        if len(section.split()) <= CHECKPOINT_CHUNK_TOKENS:
+            chunks.append(section)
+            continue
+
+        chunks.extend(_split_oversized_section(section))
+
+    return chunks or [content]
+
+
+def _split_oversized_section(section: str) -> list[str]:
+    """문단(\\n\\n) 단위로 먼저 묶고, 한 문단이 너무 길면 그 문단만 단어 단위로 추가 분할한다."""
+    header_match = _MARKDOWN_HEADER_PATTERN.match(section)
+    header_line = header_match.group(0) if header_match else None
+    body = section[len(header_line) :].lstrip("\n") if header_line else section
+
+    paragraphs = [p for p in body.split("\n\n") if p.strip()]
+    if not paragraphs:
+        return split_session_checkpoint_content(section)
+
+    chunks: list[str] = []
+    current: list[str] = []
+    current_words = 0
+
+    for paragraph in paragraphs:
+        paragraph_words = len(paragraph.split())
+        if paragraph_words > CHECKPOINT_CHUNK_TOKENS:
+            if current:
+                chunks.append("\n\n".join(current))
+                current = []
+                current_words = 0
+            chunks.extend(split_session_checkpoint_content(paragraph))
+            continue
+
+        if current and current_words + paragraph_words > CHECKPOINT_CHUNK_TOKENS:
+            chunks.append("\n\n".join(current))
+            overlap = current[-1]
+            current = [overlap]
+            current_words = len(overlap.split())
+
+        current.append(paragraph)
+        current_words += paragraph_words
+
+    if current:
+        chunks.append("\n\n".join(current))
+
+    if header_line:
+        chunks = [
+            chunk if chunk.startswith(header_line) else f"{header_line}\n{chunk}"
+            for chunk in chunks
+        ]
+    return chunks
 
 
 def upsert_session_checkpoint_source(
@@ -140,7 +214,7 @@ def upsert_session_checkpoint_source(
 
     chunks = _build_chunks(
         source_id=source.id,
-        texts=split_session_checkpoint_content(content),
+        texts=split_markdown_content(content),
     )
     deleted_chunk_ids = replace_source_chunks(
         session,

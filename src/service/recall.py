@@ -234,7 +234,9 @@ def _build_angel_message(prompt: str, evidence: list[RecallEvidence]) -> str:
 
     snippet = ""
     if best.text:
-        clean = best.text.lstrip("#> -\n").strip().split("\n")[0]
+        lines = [line for line in best.text.split("\n") if line.strip()]
+        body_lines = [line for line in lines if not line.lstrip().startswith("#")]
+        clean = (body_lines[0] if body_lines else lines[0] if lines else "").lstrip("#> -")
         snippet = _compact_text(clean, limit=80)
 
     second = ""

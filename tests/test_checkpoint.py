@@ -91,7 +91,7 @@ def test_capture_session_checkpoint_stores_source_chunk_metadata_and_connects_gr
 
     with session_factory() as session:
         source = session.scalar(select(Source).where(Source.session_id == checkpoint.session_id))
-        chunks = list(session.scalars(select(Chunk)))
+        chunks = list(session.scalars(select(Chunk).order_by(Chunk.chunk_index)))
 
     assert change.changed is True
     assert source is not None
@@ -101,11 +101,11 @@ def test_capture_session_checkpoint_stores_source_chunk_metadata_and_connects_gr
         "session_id": "session-1",
         "session_summary": "Implemented session checkpoint capture.",
     }
-    assert len(chunks) == 1
-    assert chunks[0].source_id == source.id
+    assert len(chunks) == 2
+    assert all(chunk.source_id == source.id for chunk in chunks)
     assert "Session: session-1" in chunks[0].text
-    assert "Implemented session checkpoint capture." in chunks[0].text
-    assert graph_service.connected_chunk_ids == [chunks[0].id]
+    assert "Implemented session checkpoint capture." in chunks[1].text
+    assert graph_service.connected_chunk_ids == [chunk.id for chunk in chunks]
 
 
 def test_capture_session_checkpoint_splits_long_session_summary() -> None:
@@ -124,7 +124,8 @@ def test_capture_session_checkpoint_splits_long_session_summary() -> None:
     assert change.changed is True
     assert len(chunks) > 1
     assert [chunk.chunk_index for chunk in chunks] == list(range(len(chunks)))
-    assert all(chunk.token_count <= 512 for chunk in chunks)
+    # 512단어 본문 cap + 재부착된 헤더 줄(`## Session summary`) 몇 단어 여유를 허용한다.
+    assert all(chunk.token_count <= 520 for chunk in chunks)
 
 
 def test_capture_session_checkpoint_creates_graph_edges_for_similar_checkpoint_chunks() -> None:
@@ -183,16 +184,16 @@ def test_capture_session_checkpoint_upserts_by_session_id() -> None:
 
     with session_factory() as session:
         sources = list(session.scalars(select(Source)))
-        chunks = list(session.scalars(select(Chunk)))
+        chunks = list(session.scalars(select(Chunk).order_by(Chunk.chunk_index)))
         source = sources[0]
 
     assert first.changed is True
     assert second.changed is True
     assert len(sources) == 1
-    assert len(chunks) == 1
-    assert len(graph_service.connected_chunk_ids) == 2
+    assert len(chunks) == 2
+    assert len(graph_service.connected_chunk_ids) == 4
     assert source.metadata_json["session_summary"] == "Updated summary."
-    assert "Updated summary." in chunks[0].text
+    assert "Updated summary." in chunks[1].text
 
 
 def test_checkpoint_event_updates_app_graph_service() -> None:
@@ -221,7 +222,7 @@ def test_checkpoint_event_updates_app_graph_service() -> None:
 
     assert response.status_code == 200
     assert response.json()["status"] == "accepted"
-    assert response.json()["chunk_count"] == 1
+    assert response.json()["chunk_count"] == 2
     assert graph_service.connected_chunk_ids
 
 
