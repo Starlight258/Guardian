@@ -544,7 +544,11 @@ class RecallAgent:
             search_text = _rewrite_query(search_text)
         embedding = self.graph_service.embedder.embed(search_text)
         pool_limit = self.top_k * RECALL_RERANK_POOL_MULTIPLIER
-        candidates = self.graph_service.vector_store.query_similar(embedding, limit=pool_limit)
+        source_type_filter = context.metadata.get("source_type")
+        where = {"source_type": source_type_filter} if source_type_filter else None
+        candidates = self.graph_service.vector_store.query_similar(
+            embedding, limit=pool_limit, where=where
+        )
 
         pool: list[tuple[VectorSearchResult, Chunk]] = []
         for candidate in candidates:

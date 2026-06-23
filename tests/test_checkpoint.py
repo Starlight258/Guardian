@@ -62,7 +62,9 @@ class FakeVectorStore:
     def upsert_chunk(self, chunk: Chunk, embedding: list[float]) -> None:
         self.embeddings[chunk.id] = embedding
 
-    def query_similar(self, embedding: list[float], *, limit: int) -> list[VectorSearchResult]:
+    def query_similar(
+        self, embedding: list[float], *, limit: int, where: dict | None = None
+    ) -> list[VectorSearchResult]:
         return [
             VectorSearchResult(chunk_id=chunk_id, similarity=1.0)
             for chunk_id in list(self.embeddings)[:limit]

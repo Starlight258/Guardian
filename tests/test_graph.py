@@ -57,7 +57,9 @@ class FakeVectorStore:
     def upsert_chunk(self, chunk: Chunk, embedding: list[float]) -> None:
         self.embeddings[chunk.id] = embedding
 
-    def query_similar(self, embedding: list[float], *, limit: int) -> list[VectorSearchResult]:
+    def query_similar(
+        self, embedding: list[float], *, limit: int, where: dict | None = None
+    ) -> list[VectorSearchResult]:
         results = [
             VectorSearchResult(chunk_id=chunk_id, similarity=_cosine(embedding, existing))
             for chunk_id, existing in self.embeddings.items()
@@ -210,7 +212,14 @@ def test_ingest_rolls_back_new_vectors_when_commit_fails(
 
 def test_chroma_vector_store_persists_chunk_vectors(tmp_path: Path) -> None:
     vector_store = ChromaChunkVectorStore(path=tmp_path / "chroma")
-    chunk = _chunk("source-1", "alpha beta")
+    source = Source(
+        id="source-1",
+        source_type="obsidian_note",
+        path="/tmp/source-1.md",
+        metadata_json={},
+        content_hash="source-1-hash",
+    )
+    chunk = _chunk("source-1", "alpha beta", source=source)
 
     vector_store.upsert_chunk(chunk, [1.0, 0.0])
     results = vector_store.query_similar([1.0, 0.0], limit=5)
@@ -283,8 +292,10 @@ def test_chroma_vector_store_uses_guardian_chunks_collection(
     }
 
 
-def _chunk(source_id: str, text: str, chunk_index: int = 0) -> Chunk:
-    return Chunk(
+def _chunk(
+    source_id: str, text: str, chunk_index: int = 0, *, source: Source | None = None
+) -> Chunk:
+    chunk = Chunk(
         id=str(uuid4()),
         source_id=source_id,
         chunk_index=chunk_index,
@@ -292,6 +303,9 @@ def _chunk(source_id: str, text: str, chunk_index: int = 0) -> Chunk:
         token_count=len(text.split()),
         content_hash=text,
     )
+    if source is not None:
+        chunk.source = source
+    return chunk
 
 
 def _cosine(left: list[float], right: list[float]) -> float:

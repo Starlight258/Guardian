@@ -46,7 +46,13 @@ class ChunkVectorStore(Protocol):
     def upsert_chunk(self, chunk: Chunk, embedding: list[float]) -> None:
         pass
 
-    def query_similar(self, embedding: list[float], *, limit: int) -> list[VectorSearchResult]:
+    def query_similar(
+        self,
+        embedding: list[float],
+        *,
+        limit: int,
+        where: dict[str, str] | None = None,
+    ) -> list[VectorSearchResult]:
         pass
 
     def delete_chunks(self, chunk_ids: list[str]) -> None:
@@ -78,6 +84,8 @@ class ChromaChunkVectorStore(ChunkVectorStore):
             metadatas=[
                 {
                     "source_id": chunk.source_id,
+                    "source_type": chunk.source.source_type,
+                    "path": chunk.source.path or "",
                     "chunk_index": chunk.chunk_index,
                     "token_count": chunk.token_count,
                     "content_hash": chunk.content_hash,
@@ -85,7 +93,13 @@ class ChromaChunkVectorStore(ChunkVectorStore):
             ],
         )
 
-    def query_similar(self, embedding: list[float], *, limit: int) -> list[VectorSearchResult]:
+    def query_similar(
+        self,
+        embedding: list[float],
+        *,
+        limit: int,
+        where: dict[str, str] | None = None,
+    ) -> list[VectorSearchResult]:
         if limit <= 0:
             return []
 
@@ -97,6 +111,7 @@ class ChromaChunkVectorStore(ChunkVectorStore):
             query_embeddings=[embedding],
             n_results=min(limit, count),
             include=["distances"],
+            where=where or None,
         )
         ids = result.get("ids", [[]])[0]
         distances = result.get("distances", [[]])[0]

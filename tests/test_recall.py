@@ -35,12 +35,16 @@ class FakeVectorStore:
     def __init__(self) -> None:
         self.embeddings: dict[str, list[float]] = {}
         self.query_results: list[VectorSearchResult] = []
+        self.last_where: dict | None = None
 
     def upsert_chunk(self, chunk: Chunk, embedding: list[float]) -> None:
         self.embeddings[chunk.id] = embedding
 
-    def query_similar(self, embedding: list[float], *, limit: int) -> list[VectorSearchResult]:
+    def query_similar(
+        self, embedding: list[float], *, limit: int, where: dict | None = None
+    ) -> list[VectorSearchResult]:
         del embedding
+        self.last_where = where
         return self.query_results[:limit]
 
     def delete_chunks(self, chunk_ids: list[str]) -> None:
@@ -378,4 +382,31 @@ def test_retrieve_evidence_reorders_pool_by_rerank_score() -> None:
         evidence = agent._retrieve_evidence(session, context)
 
     assert [item.chunk_id for item in evidence] == [second.id, first.id]
+
+
+def test_retrieve_evidence_passes_source_type_filter_to_vector_search() -> None:
+    session_factory = make_session_factory()
+    graph_service = FakeGraphService()
+    agent = RecallAgent(graph_service=graph_service, reranker=FakeReranker())
+    context = RecallContext(
+        text="check obsidian notes only",
+        metadata={"source_type": "obsidian_note"},
+    )
+
+    with session_factory() as session:
+        agent._retrieve_evidence(session, context)
+
+    assert graph_service.vector_store.last_where == {"source_type": "obsidian_note"}
+
+
+def test_retrieve_evidence_skips_filter_when_source_type_not_set() -> None:
+    session_factory = make_session_factory()
+    graph_service = FakeGraphService()
+    agent = RecallAgent(graph_service=graph_service, reranker=FakeReranker())
+    context = RecallContext(text="no filter here")
+
+    with session_factory() as session:
+        agent._retrieve_evidence(session, context)
+
+    assert graph_service.vector_store.last_where is None
 
