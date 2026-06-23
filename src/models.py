@@ -75,6 +75,63 @@ class GraphEdge(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Entity(Base):
+    __tablename__ = "entities"
+    __table_args__ = (
+        UniqueConstraint("normalized_name", "entity_type", name="uq_entities_name_type"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    normalized_name: Mapped[str] = mapped_column(String(255), index=True)
+    entity_type: Mapped[str] = mapped_column(String(64))
+    description: Mapped[str | None] = mapped_column(Text)
+    mention_count: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class ChunkEntity(Base):
+    __tablename__ = "chunk_entities"
+    __table_args__ = (UniqueConstraint("chunk_id", "entity_id", name="uq_chunk_entities"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    chunk_id: Mapped[str] = mapped_column(ForeignKey("chunks.id"), index=True)
+    entity_id: Mapped[str] = mapped_column(ForeignKey("entities.id"), index=True)
+    mention_text: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class EntityRelation(Base):
+    __tablename__ = "entity_relations"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_entity_id", "target_entity_id", "relation_type", name="uq_entity_relations"
+        ),
+        CheckConstraint(
+            "source_entity_id != target_entity_id", name="ck_entity_relations_distinct"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    source_entity_id: Mapped[str] = mapped_column(ForeignKey("entities.id"), index=True)
+    target_entity_id: Mapped[str] = mapped_column(ForeignKey("entities.id"), index=True)
+    relation_type: Mapped[str] = mapped_column(String(64))
+    description: Mapped[str | None] = mapped_column(Text)
+    weight: Mapped[int] = mapped_column(Integer, default=1)
+    source_chunk_id: Mapped[str] = mapped_column(ForeignKey("chunks.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
 class RecallLog(Base):
     __tablename__ = "recall_logs"
 
