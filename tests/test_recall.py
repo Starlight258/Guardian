@@ -13,7 +13,7 @@ from src.db import Base
 from src.deps import get_db
 from src.models import Chunk, RecallLog, Source
 from src.service.embed import VectorSearchResult
-from src.service.recall import RecallAgent
+from src.service.recall import RecallAgent, RecallContext
 
 
 def make_session_factory() -> Callable[[], Session]:
@@ -46,6 +46,14 @@ class FakeVectorStore:
     def delete_chunks(self, chunk_ids: list[str]) -> None:
         for chunk_id in chunk_ids:
             self.embeddings.pop(chunk_id, None)
+
+
+class FakeReranker:
+    """원래 벡터 검색 순서를 그대로 보존하는 reranker — 실제 cross-encoder 모델 로드를 피한다."""
+
+    def rerank(self, query: str, documents: list[str]) -> list[float]:
+        del query
+        return [float(len(documents) - index) for index in range(len(documents))]
 
 
 class FakeGraphService:
@@ -174,7 +182,7 @@ def test_recall_endpoint_persists_triggered_angel_message(monkeypatch) -> None:
         relevance_score=0.82,
         angel_message=long_message,
     )
-    agent = RecallAgent(graph_service=graph_service, llm_client=llm_client)
+    agent = RecallAgent(graph_service=graph_service, llm_client=llm_client, reranker=FakeReranker())
 
     def override_get_db():
         with session_factory() as session:
@@ -247,7 +255,7 @@ def test_recall_endpoint_drops_below_threshold(monkeypatch) -> None:
         relevance_score=0.3,
         angel_message="this should be dropped",
     )
-    agent = RecallAgent(graph_service=graph_service, llm_client=llm_client)
+    agent = RecallAgent(graph_service=graph_service, llm_client=llm_client, reranker=FakeReranker())
 
     def override_get_db():
         with session_factory() as session:
@@ -303,7 +311,7 @@ def test_recall_endpoint_handles_empty_chunk_ids(monkeypatch) -> None:
         relevance_score=0.9,
         angel_message="ignored",
     )
-    agent = RecallAgent(graph_service=graph_service, llm_client=llm_client)
+    agent = RecallAgent(graph_service=graph_service, llm_client=llm_client, reranker=FakeReranker())
 
     def override_get_db():
         with session_factory() as session:
@@ -324,3 +332,50 @@ def test_recall_endpoint_handles_empty_chunk_ids(monkeypatch) -> None:
     assert payload["status"] == "dropped"
     assert payload["drop_reason"] == "empty_chunk_ids"
     assert payload["angel_triggered"] is False
+
+
+class _ReversingReranker:
+    """벡터 검색 순서를 뒤집어서, reranker가 실제로 순서를 바꾸는지 검증한다."""
+
+    def rerank(self, query: str, documents: list[str]) -> list[float]:
+        del query
+        return [float(index) for index in range(len(documents))]
+
+
+def test_retrieve_evidence_reorders_pool_by_rerank_score() -> None:
+    session_factory = make_session_factory()
+    graph_service = FakeGraphService()
+
+    with session_factory() as session:
+        first = _seed_chunk(
+            session,
+            source_id="source-1",
+            chunk_index=0,
+            text="context alpha beta",
+            title="Alpha Note",
+            path="/tmp/alpha.md",
+        )
+        second = _seed_chunk(
+            session,
+            source_id="source-2",
+            chunk_index=0,
+            text="context gamma delta",
+            title="Beta Note",
+            path="/tmp/beta.md",
+        )
+        session.commit()
+
+    # 코사인 유사도 기준으로는 first가 1위지만, reranker가 순서를 뒤집는다.
+    graph_service.vector_store.query_results = [
+        VectorSearchResult(chunk_id=first.id, similarity=0.95),
+        VectorSearchResult(chunk_id=second.id, similarity=0.80),
+    ]
+
+    agent = RecallAgent(graph_service=graph_service, reranker=_ReversingReranker())
+    context = RecallContext(text="context about alpha and gamma")
+
+    with session_factory() as session:
+        evidence = agent._retrieve_evidence(session, context)
+
+    assert [item.chunk_id for item in evidence] == [second.id, first.id]
+

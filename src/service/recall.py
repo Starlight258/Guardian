@@ -11,7 +11,9 @@ from typing import Any, Protocol
 from sqlalchemy.orm import Session
 
 from src.models import Chunk, RecallLog
+from src.service.embed import VectorSearchResult
 from src.service.graph import GraphService
+from src.service.rerank import CrossEncoderReranker, Reranker
 from src.utils import hash_text
 
 _ANGEL_STATE_PATH = Path.home() / ".guardian" / "angel-state.json"
@@ -73,6 +75,7 @@ def _write_angel_state(
 
 
 RECALL_TOP_K = 5
+RECALL_RERANK_POOL_MULTIPLIER = 4
 RECALL_RELEVANCE_THRESHOLD = 0.5
 QUERY_REWRITE_THRESHOLD = 80  # chars — longer queries get LLM rewrite
 RECALL_ANGEL_MESSAGE_MAX_LENGTH = 120
@@ -382,12 +385,14 @@ class RecallAgent:
         *,
         graph_service: GraphService,
         llm_client: RecallLLMClient | None = None,
+        reranker: Reranker | None = None,
         top_k: int = RECALL_TOP_K,
         relevance_threshold: float = RECALL_RELEVANCE_THRESHOLD,
         persist_angel_message: bool = True,
     ) -> None:
         self.graph_service = graph_service
         self.llm_client = llm_client or HeuristicRecallLLMClient()
+        self.reranker = reranker if reranker is not None else CrossEncoderReranker()
         self.top_k = top_k
         self.relevance_threshold = relevance_threshold
         self.persist_angel_message = persist_angel_message
@@ -538,15 +543,30 @@ class RecallAgent:
         if len(search_text) > QUERY_REWRITE_THRESHOLD:
             search_text = _rewrite_query(search_text)
         embedding = self.graph_service.embedder.embed(search_text)
-        candidates = self.graph_service.vector_store.query_similar(embedding, limit=self.top_k)
+        pool_limit = self.top_k * RECALL_RERANK_POOL_MULTIPLIER
+        candidates = self.graph_service.vector_store.query_similar(embedding, limit=pool_limit)
+
+        pool: list[tuple[VectorSearchResult, Chunk]] = []
+        for candidate in candidates:
+            chunk = session.get(Chunk, candidate.chunk_id)
+            if chunk is None:
+                continue
+            pool.append((candidate, chunk))
+
+        if pool:
+            rerank_scores = self.reranker.rerank(search_text, [chunk.text for _, chunk in pool])
+            pool = [
+                pair
+                for pair, _ in sorted(
+                    zip(pool, rerank_scores, strict=True), key=lambda item: item[1], reverse=True
+                )
+            ]
+        pool = pool[: self.top_k]
 
         evidence_by_id: dict[str, RecallEvidence] = {}
         ordered_ids: list[str] = []
-        for candidate in candidates:
-            if candidate.chunk_id in evidence_by_id:
-                continue
-            chunk = session.get(Chunk, candidate.chunk_id)
-            if chunk is None:
+        for candidate, chunk in pool:
+            if chunk.id in evidence_by_id:
                 continue
             evidence = self._chunk_to_evidence(
                 chunk=chunk,
