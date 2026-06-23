@@ -3,7 +3,8 @@
 Guardian Evaluation Loop
 
 Metrics:
-  context_precision   : expected_source가 상위 검색 결과에 포함된 비율
+  context_precision   : 검색된 chunk가 정답 소스 본문과 얼마나 일치하는지 (ragas,
+                         NonLLMContextPrecisionWithReference — 문자열 유사도 기반, LLM 미사용)
   false_positive_rate : should_trigger=False인데 angel이 발동된 비율
   answer_relevancy    : angel_message가 쿼리에 실제로 답하는 비율 (ragas)
   faithfulness        : angel_message가 검색 문서에 충실한 비율 (ragas)
@@ -58,6 +59,7 @@ class CaseResult:
     triggered: bool
     retrieved_sources: list[str]
     retrieved_texts: list[str]
+    reference_contexts: list[str]
     angel_message: str | None
     relevance_score: float | None
     drop_reason: str | None
@@ -72,6 +74,28 @@ def load_cases(path: Path) -> list[EvalCase]:
         d = json.loads(line)
         cases.append(EvalCase(**{k: v for k, v in d.items() if k in EvalCase.__dataclass_fields__}))
     return cases
+
+
+def _load_reference_contexts(session, expected_source: str) -> list[str]:
+    """expected_source 파일명과 일치하는 Source의 chunk 본문을 정답 컨텍스트로 가져온다."""
+    from sqlalchemy import select
+
+    from src.models import Chunk, Source
+
+    source = next(
+        (
+            s
+            for s in session.scalars(select(Source))
+            if s.path and Path(s.path).name == expected_source
+        ),
+        None,
+    )
+    if source is None:
+        return []
+    chunks = session.scalars(
+        select(Chunk).where(Chunk.source_id == source.id).order_by(Chunk.chunk_index)
+    )
+    return [chunk.text for chunk in chunks]
 
 
 def run_cases(cases: list[EvalCase]) -> list[CaseResult]:
@@ -106,11 +130,16 @@ def run_cases(cases: list[EvalCase]) -> list[CaseResult]:
                     if chunk.source and chunk.source.path:
                         retrieved_sources.append(Path(chunk.source.path).name)
 
+            reference_contexts: list[str] = []
+            if case.expected_source:
+                reference_contexts = _load_reference_contexts(session, case.expected_source)
+
         results.append(CaseResult(
             case=case,
             triggered=result.angel_triggered,
             retrieved_sources=retrieved_sources,
             retrieved_texts=retrieved_texts,
+            reference_contexts=reference_contexts,
             angel_message=result.angel_message,
             relevance_score=result.relevance_score,
             drop_reason=result.drop_reason,
@@ -119,11 +148,36 @@ def run_cases(cases: list[EvalCase]) -> list[CaseResult]:
 
 
 def _context_precision(results: list[CaseResult]) -> float:
-    labeled = [r for r in results if r.case.expected_source]
+    """ragas NonLLMContextPrecisionWithReference — 검색된 chunk와 정답 소스 본문의
+    문자열 유사도 기반 정밀도. LLM을 쓰지 않아 결정적(deterministic)이라 pass 게이트에 둔다."""
+    labeled = [r for r in results if r.case.expected_source and r.reference_contexts]
     if not labeled:
         return 1.0
-    hits = sum(1 for r in labeled if r.case.expected_source in r.retrieved_sources)
-    return hits / len(labeled)
+
+    try:
+        from ragas import EvaluationDataset, SingleTurnSample, evaluate
+        from ragas.metrics import NonLLMContextPrecisionWithReference
+    except ImportError as e:
+        logger.warning("ragas 의존성 없음: %s — expected_source hit rate로 대체", e)
+        hits = sum(1 for r in labeled if r.case.expected_source in r.retrieved_sources)
+        return hits / len(labeled)
+
+    samples = [
+        SingleTurnSample(
+            retrieved_contexts=r.retrieved_texts or [""],
+            reference_contexts=r.reference_contexts,
+        )
+        for r in labeled
+    ]
+    dataset = EvaluationDataset(samples=samples)
+    result = evaluate(
+        dataset=dataset,
+        metrics=[NonLLMContextPrecisionWithReference()],
+        show_progress=False,
+    )
+    scores = result["non_llm_context_precision_with_reference"]
+    valid = [s for s in scores if s is not None]
+    return sum(valid) / len(valid) if valid else 0.0
 
 
 def compute_ragas_metrics(results: list[CaseResult]) -> dict[str, float]:
