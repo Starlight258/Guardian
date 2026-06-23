@@ -60,6 +60,7 @@ def receive_checkpoint_event(
     db: Session = DBSession,
 ) -> SessionCheckpointResponse:
     graph_service = getattr(request.app.state, "graph_service", None)
+    entity_graph_service = getattr(request.app.state, "entity_graph_service", None)
     change = capture_session_checkpoint(
         db,
         checkpoint=SessionCheckpoint(
@@ -68,6 +69,7 @@ def receive_checkpoint_event(
             metadata=event.metadata,
         ),
         graph_service=graph_service,
+        entity_graph_service=entity_graph_service,
     )
     return SessionCheckpointResponse(
         status="deduped" if not change.changed else "accepted",

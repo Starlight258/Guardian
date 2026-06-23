@@ -25,7 +25,7 @@ class ReindexState:
     running: bool = False
 
 
-def _reindex_sync(state: ReindexState, graph_service) -> None:
+def _reindex_sync(state: ReindexState, graph_service, entity_graph_service=None) -> None:
     vault_paths = obsidian_paths_from_env()
     files = [f for p in vault_paths for f in Path(p).rglob("*.md")]
     state.total = len(files)
@@ -48,7 +48,12 @@ def _reindex_sync(state: ReindexState, graph_service) -> None:
                 if cached is not None and cached >= path.stat().st_mtime:
                     state.skipped += 1
                     continue
-                save_obsidian_note(session, path=path, graph_service=graph_service)
+                save_obsidian_note(
+                    session,
+                    path=path,
+                    graph_service=graph_service,
+                    entity_graph_service=entity_graph_service,
+                )
             except Exception:
                 logger.warning("Reindex failed for %s", path, exc_info=True)
                 session.rollback()
@@ -68,5 +73,7 @@ def _reindex_sync(state: ReindexState, graph_service) -> None:
     )
 
 
-async def run_initial_reindex(state: ReindexState, graph_service) -> None:
-    await asyncio.to_thread(_reindex_sync, state, graph_service)
+async def run_initial_reindex(
+    state: ReindexState, graph_service, entity_graph_service=None
+) -> None:
+    await asyncio.to_thread(_reindex_sync, state, graph_service, entity_graph_service)

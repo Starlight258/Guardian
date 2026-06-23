@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -15,6 +16,7 @@ from src.api.graph import router as graph_router
 from src.api.recall import router as recall_router
 from src.db import SessionLocal
 from src.llm import make_llm_client
+from src.service.entity_graph import EntityGraphService
 from src.service.graph import GraphService
 from src.service.recall import RecallAgent
 from src.service.reindex import ReindexState, run_initial_reindex
@@ -23,6 +25,8 @@ from src.service.watcher import create_watchers_from_env
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s: %(message)s")
+
+ENTITY_GRAPH_ENABLED_ENV = "GUARDIAN_ENTITY_GRAPH_ENABLED"
 
 
 @asynccontextmanager
@@ -33,14 +37,25 @@ async def lifespan(app: FastAPI):
     app.state.graph_service = graph_service
     app.state.recall_agent = RecallAgent(graph_service=graph_service, llm_client=make_llm_client())
 
-    watchers = create_watchers_from_env(graph_service=graph_service)
+    entity_graph_service = None
+    if os.getenv(ENTITY_GRAPH_ENABLED_ENV, "false").lower() == "true":
+        entity_graph_service = EntityGraphService()
+        with SessionLocal() as session:
+            entity_graph_service.reconstruct(session)
+    app.state.entity_graph_service = entity_graph_service
+
+    watchers = create_watchers_from_env(
+        graph_service=graph_service, entity_graph_service=entity_graph_service
+    )
     for watcher in watchers:
         watcher.start()
     app.state.obsidian_watchers = watchers
 
     reindex_state = ReindexState()
     app.state.reindex_state = reindex_state
-    asyncio.create_task(run_initial_reindex(reindex_state, graph_service))
+    asyncio.create_task(
+        run_initial_reindex(reindex_state, graph_service, entity_graph_service)
+    )
 
     try:
         yield

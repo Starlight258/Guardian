@@ -10,6 +10,7 @@ from watchdog.events import FileMovedEvent, FileSystemEvent, FileSystemEventHand
 from watchdog.observers import Observer
 
 from src.db import SessionLocal
+from src.service.entity_graph import EntityGraphService
 from src.service.graph import GraphService
 from src.service.note_save import delete_obsidian_note, move_obsidian_note, save_obsidian_note
 from src.utils import obsidian_paths_from_env
@@ -56,9 +57,11 @@ class ObsidianEventHandler(FileSystemEventHandler):
         session_factory: SessionFactory,
         debounce_ms: int = 300,
         graph_service: GraphService | None = None,
+        entity_graph_service: EntityGraphService | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._graph_service = graph_service
+        self._entity_graph_service = entity_graph_service
         self._debouncer = Debouncer(debounce_ms / 1000)
 
     def on_created(self, event: FileSystemEvent) -> None:
@@ -106,6 +109,8 @@ class ObsidianEventHandler(FileSystemEventHandler):
         with self._session_factory() as session:
             if self._graph_service is not None:
                 kwargs["graph_service"] = self._graph_service
+            if self._entity_graph_service is not None and callback is save_obsidian_note:
+                kwargs["entity_graph_service"] = self._entity_graph_service
             callback(session, **kwargs)
 
 
@@ -117,12 +122,14 @@ class ObsidianWatcher:
         session_factory: SessionFactory = SessionLocal,
         debounce_ms: int = 300,
         graph_service: GraphService | None = None,
+        entity_graph_service: EntityGraphService | None = None,
     ) -> None:
         self._vault_path = vault_path
         self._handler = ObsidianEventHandler(
             session_factory=session_factory,
             debounce_ms=debounce_ms,
             graph_service=graph_service,
+            entity_graph_service=entity_graph_service,
         )
         self._observer = Observer()
 
@@ -136,9 +143,16 @@ class ObsidianWatcher:
         self._observer.join(timeout=5)
 
 
-def create_watchers_from_env(graph_service: GraphService | None = None) -> list[ObsidianWatcher]:
+def create_watchers_from_env(
+    graph_service: GraphService | None = None,
+    entity_graph_service: EntityGraphService | None = None,
+) -> list[ObsidianWatcher]:
     return [
-        ObsidianWatcher(vault_path=path, graph_service=graph_service)
+        ObsidianWatcher(
+            vault_path=path,
+            graph_service=graph_service,
+            entity_graph_service=entity_graph_service,
+        )
         for path in obsidian_paths_from_env()
     ]
 

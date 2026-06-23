@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from src.crud.source import SourceChunkChange, upsert_session_checkpoint_source
+from src.service.entity_graph import EntityGraphService
 from src.service.graph import GraphService
 
 
@@ -22,6 +23,7 @@ def capture_session_checkpoint(
     *,
     checkpoint: SessionCheckpoint,
     graph_service: GraphService | None = None,
+    entity_graph_service: EntityGraphService | None = None,
 ) -> SourceChunkChange:
     change = upsert_session_checkpoint_source(
         session,
@@ -33,11 +35,17 @@ def capture_session_checkpoint(
         if graph_service is not None and change.changed:
             session.flush()
             graph_service.connect_chunks(session, change.chunks)
+        if entity_graph_service is not None and change.changed:
+            session.flush()
+            for chunk in change.chunks:
+                entity_graph_service.extract_and_store(session, chunk)
         session.commit()
     except Exception:
         session.rollback()
         if graph_service is not None and change.changed:
             graph_service.delete_chunks([chunk.id for chunk in change.chunks])
             graph_service.reconstruct(session)
+        if entity_graph_service is not None and change.changed:
+            entity_graph_service.reconstruct(session)
         raise
     return change
