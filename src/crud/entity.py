@@ -90,3 +90,15 @@ def upsert_entity_relation(
 
 def list_entity_relations(session: Session) -> list[EntityRelation]:
     return list(session.scalars(select(EntityRelation)))
+
+
+def list_entity_ids_for_chunk(session: Session, chunk_id: str) -> list[str]:
+    return list(
+        session.scalars(select(ChunkEntity.entity_id).where(ChunkEntity.chunk_id == chunk_id))
+    )
+
+
+def list_chunk_ids_for_entity(session: Session, entity_id: str) -> list[str]:
+    return list(
+        session.scalars(select(ChunkEntity.chunk_id).where(ChunkEntity.entity_id == entity_id))
+    )

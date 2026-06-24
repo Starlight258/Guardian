@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -34,19 +34,22 @@ class FakeExtractor:
 
 
 def _seed_chunk(session: Session, *, chunk_id: str = "chunk-1", text: str = "text") -> Chunk:
-    source = Source(
-        id="source-1",
-        source_type="obsidian_note",
-        title="Note",
-        path="/tmp/note.md",
-        metadata_json={},
-        content_hash="hash",
-    )
-    session.add(source)
+    source = session.get(Source, "source-1")
+    if source is None:
+        source = Source(
+            id="source-1",
+            source_type="obsidian_note",
+            title="Note",
+            path="/tmp/note.md",
+            metadata_json={},
+            content_hash="hash",
+        )
+        session.add(source)
+    chunk_index = session.scalar(select(func.count()).select_from(Chunk)) or 0
     chunk = Chunk(
         id=chunk_id,
         source_id="source-1",
-        chunk_index=0,
+        chunk_index=chunk_index,
         text=text,
         token_count=len(text.split()),
         content_hash=f"{chunk_id}-hash",
@@ -219,3 +222,49 @@ def test_detect_communities_handles_empty_graph() -> None:
     service = EntityGraphService(extractor=FakeExtractor(ExtractionResult()))
 
     assert service.detect_communities() == []
+
+
+def test_find_related_chunk_ids_follows_entity_graph_edge() -> None:
+    from src.crud.entity import record_chunk_entity
+
+    session_factory = make_session_factory()
+    service = EntityGraphService(extractor=FakeExtractor(ExtractionResult()))
+    service.graph.add_edge("entity-a", "entity-b")
+
+    with session_factory() as session:
+        chunk_a = _seed_chunk(session, chunk_id="chunk-a")
+        chunk_b = _seed_chunk(session, chunk_id="chunk-b")
+        record_chunk_entity(session, chunk_id=chunk_a.id, entity_id="entity-a", mention_text="A")
+        record_chunk_entity(session, chunk_id=chunk_b.id, entity_id="entity-b", mention_text="B")
+        session.commit()
+
+        related = service.find_related_chunk_ids(
+            session, chunk_a.id, exclude_chunk_ids=set(), max_results=10
+        )
+
+    assert related == [chunk_b.id]
+
+
+def test_find_related_chunk_ids_respects_max_results_and_exclusions() -> None:
+    from src.crud.entity import record_chunk_entity
+
+    session_factory = make_session_factory()
+    service = EntityGraphService(extractor=FakeExtractor(ExtractionResult()))
+    service.graph.add_edge("entity-a", "entity-b")
+
+    with session_factory() as session:
+        chunk_a = _seed_chunk(session, chunk_id="chunk-a")
+        chunk_b = _seed_chunk(session, chunk_id="chunk-b")
+        record_chunk_entity(session, chunk_id=chunk_a.id, entity_id="entity-a", mention_text="A")
+        record_chunk_entity(session, chunk_id=chunk_b.id, entity_id="entity-b", mention_text="B")
+        session.commit()
+
+        excluded = service.find_related_chunk_ids(
+            session, chunk_a.id, exclude_chunk_ids={chunk_b.id}, max_results=10
+        )
+        zero_limit = service.find_related_chunk_ids(
+            session, chunk_a.id, exclude_chunk_ids=set(), max_results=0
+        )
+
+    assert excluded == []
+    assert zero_limit == []

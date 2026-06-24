@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
@@ -9,10 +10,13 @@ from mcp.server.fastmcp import FastMCP
 
 from src.db import SessionLocal
 from src.llm import make_llm_client
+from src.service.entity_graph import EntityGraphService
 from src.service.graph import GraphService
 from src.service.recall import RecallAgent, RecallResult
 
 load_dotenv()
+
+ENTITY_GRAPH_ENABLED_ENV = "GUARDIAN_ENTITY_GRAPH_ENABLED"
 
 mcp = FastMCP(
     "guardian-mcp",
@@ -51,9 +55,20 @@ def _get_runtime() -> MCPRuntime:
     graph_service = GraphService()
     with SessionLocal() as session:
         graph_service.reconstruct(session)
+
+    entity_graph_service = None
+    if os.getenv(ENTITY_GRAPH_ENABLED_ENV, "false").lower() == "true":
+        entity_graph_service = EntityGraphService()
+        with SessionLocal() as session:
+            entity_graph_service.reconstruct(session)
+
     return MCPRuntime(
         graph_service=graph_service,
-        recall_agent=RecallAgent(graph_service=graph_service, llm_client=make_llm_client()),
+        recall_agent=RecallAgent(
+            graph_service=graph_service,
+            llm_client=make_llm_client(),
+            entity_graph_service=entity_graph_service,
+        ),
     )
 
 

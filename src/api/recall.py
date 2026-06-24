@@ -30,7 +30,10 @@ def run_recall(
 
     recall_agent = getattr(request.app.state, "recall_agent", None)
     if recall_agent is None:
-        recall_agent = RecallAgent(graph_service=graph_service)
+        entity_graph_service = getattr(request.app.state, "entity_graph_service", None)
+        recall_agent = RecallAgent(
+            graph_service=graph_service, entity_graph_service=entity_graph_service
+        )
 
     result = recall_agent.recall(
         db,

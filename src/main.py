@@ -35,7 +35,6 @@ async def lifespan(app: FastAPI):
     with SessionLocal() as session:
         graph_service.reconstruct(session)
     app.state.graph_service = graph_service
-    app.state.recall_agent = RecallAgent(graph_service=graph_service, llm_client=make_llm_client())
 
     entity_graph_service = None
     if os.getenv(ENTITY_GRAPH_ENABLED_ENV, "false").lower() == "true":
@@ -43,6 +42,12 @@ async def lifespan(app: FastAPI):
         with SessionLocal() as session:
             entity_graph_service.reconstruct(session)
     app.state.entity_graph_service = entity_graph_service
+
+    app.state.recall_agent = RecallAgent(
+        graph_service=graph_service,
+        llm_client=make_llm_client(),
+        entity_graph_service=entity_graph_service,
+    )
 
     watchers = create_watchers_from_env(
         graph_service=graph_service, entity_graph_service=entity_graph_service

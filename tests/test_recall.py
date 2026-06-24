@@ -410,3 +410,58 @@ def test_retrieve_evidence_skips_filter_when_source_type_not_set() -> None:
 
     assert graph_service.vector_store.last_where is None
 
+
+def test_retrieve_evidence_expands_via_entity_graph() -> None:
+    from src.crud.entity import record_chunk_entity
+    from src.service.entity_graph import EntityGraphService
+
+    session_factory = make_session_factory()
+    graph_service = FakeGraphService()
+
+    with session_factory() as session:
+        matched = _seed_chunk(
+            session,
+            source_id="source-1",
+            chunk_index=0,
+            text="context about RAG",
+            title="RAG Note",
+            path="/tmp/rag.md",
+        )
+        unmatched = _seed_chunk(
+            session,
+            source_id="source-2",
+            chunk_index=0,
+            text="completely different wording about embeddings",
+            title="Embeddings Note",
+            path="/tmp/embeddings.md",
+        )
+        record_chunk_entity(
+            session, chunk_id=matched.id, entity_id="entity-rag", mention_text="RAG"
+        )
+        record_chunk_entity(
+            session, chunk_id=unmatched.id, entity_id="entity-embed", mention_text="embeddings"
+        )
+        session.commit()
+
+    graph_service.vector_store.query_results = [
+        VectorSearchResult(chunk_id=matched.id, similarity=0.95)
+    ]
+
+    entity_graph_service = EntityGraphService(extractor=object())
+    entity_graph_service.graph.add_edge("entity-rag", "entity-embed")
+
+    agent = RecallAgent(
+        graph_service=graph_service,
+        reranker=FakeReranker(),
+        entity_graph_service=entity_graph_service,
+    )
+    context = RecallContext(text="context about RAG")
+
+    with session_factory() as session:
+        evidence = agent._retrieve_evidence(session, context)
+
+    assert {item.chunk_id for item in evidence} == {matched.id, unmatched.id}
+    entity_evidence = next(item for item in evidence if item.chunk_id == unmatched.id)
+    assert entity_evidence.relation == "entity"
+    assert entity_evidence.neighbor_of == matched.id
+

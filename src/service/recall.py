@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from src.models import Chunk, RecallLog
 from src.service.embed import VectorSearchResult
+from src.service.entity_graph import EntityGraphService
 from src.service.graph import GraphService
 from src.service.rerank import CrossEncoderReranker, Reranker
 from src.utils import hash_text
@@ -76,6 +77,7 @@ def _write_angel_state(
 
 RECALL_TOP_K = 5
 RECALL_RERANK_POOL_MULTIPLIER = 4
+RECALL_ENTITY_EVIDENCE_SIMILARITY = 0.6
 RECALL_RELEVANCE_THRESHOLD = 0.5
 QUERY_REWRITE_THRESHOLD = 80  # chars — longer queries get LLM rewrite
 RECALL_ANGEL_MESSAGE_MAX_LENGTH = 120
@@ -386,6 +388,7 @@ class RecallAgent:
         graph_service: GraphService,
         llm_client: RecallLLMClient | None = None,
         reranker: Reranker | None = None,
+        entity_graph_service: EntityGraphService | None = None,
         top_k: int = RECALL_TOP_K,
         relevance_threshold: float = RECALL_RELEVANCE_THRESHOLD,
         persist_angel_message: bool = True,
@@ -393,6 +396,7 @@ class RecallAgent:
         self.graph_service = graph_service
         self.llm_client = llm_client or HeuristicRecallLLMClient()
         self.reranker = reranker if reranker is not None else CrossEncoderReranker()
+        self.entity_graph_service = entity_graph_service
         self.top_k = top_k
         self.relevance_threshold = relevance_threshold
         self.persist_angel_message = persist_angel_message
@@ -602,6 +606,28 @@ class RecallAgent:
                     neighbor_of=chunk_id,
                 )
                 ordered_ids.append(neighbor_id)
+
+        if self.entity_graph_service is not None:
+            for chunk_id in list(ordered_ids):
+                if len(evidence_by_id) >= RECALL_MAX_EVIDENCE_ITEMS:
+                    break
+                related_ids = self.entity_graph_service.find_related_chunk_ids(
+                    session,
+                    chunk_id,
+                    exclude_chunk_ids=set(evidence_by_id),
+                    max_results=RECALL_MAX_EVIDENCE_ITEMS - len(evidence_by_id),
+                )
+                for related_id in related_ids:
+                    related_chunk = session.get(Chunk, related_id)
+                    if related_chunk is None:
+                        continue
+                    evidence_by_id[related_id] = self._chunk_to_evidence(
+                        chunk=related_chunk,
+                        similarity=RECALL_ENTITY_EVIDENCE_SIMILARITY,
+                        relation="entity",
+                        neighbor_of=chunk_id,
+                    )
+                    ordered_ids.append(related_id)
 
         return [evidence_by_id[chunk_id] for chunk_id in ordered_ids if chunk_id in evidence_by_id]
 

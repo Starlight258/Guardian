@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from src.crud.entity import (
     get_or_create_entity,
+    list_chunk_ids_for_entity,
+    list_entity_ids_for_chunk,
     list_entity_relations,
     record_chunk_entity,
     upsert_entity_relation,
@@ -69,6 +71,34 @@ class EntityGraphService:
             )
 
         return result
+
+    def find_related_chunk_ids(
+        self,
+        session: Session,
+        chunk_id: str,
+        *,
+        exclude_chunk_ids: set[str],
+        max_results: int,
+    ) -> list[str]:
+        """청크가 언급한 엔티티의 그래프 이웃 엔티티를 따라가, 그 이웃을 언급하는
+        다른 청크 id를 찾는다 (entity-graph local search)."""
+        if max_results <= 0:
+            return []
+
+        related: list[str] = []
+        seen = set(exclude_chunk_ids) | {chunk_id}
+        for entity_id in list_entity_ids_for_chunk(session, chunk_id):
+            if entity_id not in self.graph:
+                continue
+            for neighbor_id in self.graph.neighbors(entity_id):
+                for related_chunk_id in list_chunk_ids_for_entity(session, neighbor_id):
+                    if related_chunk_id in seen:
+                        continue
+                    seen.add(related_chunk_id)
+                    related.append(related_chunk_id)
+                    if len(related) >= max_results:
+                        return related
+        return related
 
     def detect_communities(self) -> list[set[str]]:
         """modularity 기반 커뮤니티 탐지. 엣지가 없는 고립 노드는 각자 1개 커뮤니티로 취급."""
